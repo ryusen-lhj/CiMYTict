@@ -95,18 +95,36 @@ namespace CiMYTict.Controllers
             bool layoutChanged = totalRows != hall.TotalRows || seatsPerRow != hall.SeatsPerRow;
             bool hasBookings = await _context.Bookings.AnyAsync(b => b.Showtime != null && b.Showtime.CinemaHallId == id);
 
-            if (hasBookings && (layoutChanged || hall.HallType != hallType ||
-                hall.Seats.Any(s => !seatIds.Contains(s.SeatId))))
-            {
-                ModelState.AddModelError(string.Empty,
-                    "This hall already has bookings. Its capacity, auditorium type and seat categories cannot be changed because existing tickets must remain valid.");
-            }
+            bool seatSubmissionValid =
+                seatIds.Length == hall.Seats.Count &&
+                seatCategories.Length == hall.Seats.Count &&
+                extraPrices.Length == hall.Seats.Count &&
+                hall.Seats.Select(s => s.SeatId).OrderBy(x => x).SequenceEqual(seatIds.OrderBy(x => x));
 
-            if (seatIds.Length != hall.Seats.Count || seatCategories.Length != hall.Seats.Count ||
-                extraPrices.Length != hall.Seats.Count ||
-                !hall.Seats.Select(s => s.SeatId).OrderBy(x => x).SequenceEqual(seatIds.OrderBy(x => x)))
+            if (!seatSubmissionValid)
             {
                 ModelState.AddModelError(string.Empty, "The submitted seat layout is incomplete or outdated. Reload the page and try again.");
+            }
+
+            bool seatCategoriesChanged = false;
+            if (seatSubmissionValid)
+            {
+                var existingSeats = hall.Seats.ToDictionary(s => s.SeatId);
+                for (int i = 0; i < seatIds.Length; i++)
+                {
+                    var existing = existingSeats[seatIds[i]];
+                    if (existing.Category != seatCategories[i] || existing.ExtraPrice != extraPrices[i])
+                    {
+                        seatCategoriesChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasBookings && (layoutChanged || hall.HallType != hallType || seatCategoriesChanged))
+            {
+                ModelState.AddModelError(string.Empty,
+                    "This hall already has bookings. Its capacity, auditorium type, seat categories and surcharges cannot be changed because existing tickets must remain valid.");
             }
 
             if (seatCategories.Any(c => !Enum.IsDefined(typeof(SeatCategory), c)))
