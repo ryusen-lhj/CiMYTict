@@ -30,6 +30,7 @@ else
                     {
                         <div class="alert alert-warning small mt-3 mb-0">
                             <strong>Cancellation under review.</strong> Your ticket remains active until the admin approves the request.
+                            <div class="mt-2"><a asp-action="Ticket" asp-route-bookingId="@b.BookingId" class="btn btn-sm btn-outline-dark">View Active E-Ticket</a></div>
                             <div class="mt-1">Reason: @b.CancellationReason</div>
                         </div>
                     }
