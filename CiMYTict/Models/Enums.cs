@@ -6,6 +6,16 @@ namespace CiMYTict.Models
         Staff = 1
     }
 
+    // Auditorium format and recommended total-seat capacity ranges.
+    public enum CinemaHallType
+    {
+        StandardMidSize = 0,
+        LargeFormatIMAX = 1,
+        SmallIndependent = 2,
+        VIPRecliner = 3,
+        CouplesThemed = 4
+    }
+
     public enum SeatCategory
     {
         Standard = 0,
