@@ -56,8 +56,14 @@
             <!-- Legend -->
             <div class="d-flex flex-wrap justify-content-center gap-3 mt-4 pt-3 border-top small">
                 <span><span class="badge bg-primary">&nbsp;&nbsp;</span> Standard (RM @Model.Showtime.BaseTicketPrice.ToString("F2"))</span>
-                <span><span class="badge bg-warning text-dark">&nbsp;&nbsp;</span> VIP (+RM 5.00)</span>
-                <span><span class="badge bg-danger">&nbsp;&nbsp;</span> Couple (+RM 10.00)</span>
+                @if (Model.AllSeats.Any(s => s.Category == SeatCategory.VIP))
+                {
+                    <span><span class="badge bg-warning text-dark">&nbsp;&nbsp;</span> VIP (additional charge)</span>
+                }
+                @if (Model.AllSeats.Any(s => s.Category == SeatCategory.Couple))
+                {
+                    <span><span class="badge bg-danger">&nbsp;&nbsp;</span> Couple (additional charge)</span>
+                }
                 <span><span class="badge bg-success">&nbsp;&nbsp;</span> Selected</span>
                 <span><span class="badge bg-secondary">&nbsp;&nbsp;</span> Occupied</span>
             </div>
