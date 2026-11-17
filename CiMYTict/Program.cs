@@ -51,6 +51,9 @@ using (var scope = app.Services.CreateScope())
 
         IF COL_LENGTH(N'dbo.CinemaHalls', N'HallType') IS NULL
             ALTER TABLE dbo.CinemaHalls ADD HallType INT NOT NULL CONSTRAINT DF_CinemaHalls_HallType DEFAULT (0);
+
+        IF COL_LENGTH(N'dbo.Users', N'ProfileImagePath') IS NULL
+            ALTER TABLE dbo.Users ADD ProfileImagePath NVARCHAR(300) NULL;
         """);
 }
 
