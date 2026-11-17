@@ -5,6 +5,7 @@ using CiMYTict.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace CiMYTict.Controllers
 {
@@ -90,5 +91,47 @@ namespace CiMYTict.Controllers
 
             return View(vm);
         }
+        [HttpGet]
+        public async Task<IActionResult> ExportCsv()
+        {
+            var bookings = await _context.Bookings
+                .Where(b => b.Status == BookingStatus.Confirmed)
+                .Include(b => b.User)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.Movie)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.CinemaHall)
+                .Include(b => b.BookingSeats).ThenInclude(bs => bs.Seat)
+                .Include(b => b.Payment)
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync();
+
+            static string Csv(string? value) => "\"" + (value ?? string.Empty).Replace("\"", "\"\"") + "\"";
+            var csv = new StringBuilder();
+            csv.AppendLine("Booking Reference,Customer,Email,Movie,Cinema Hall,Showtime,Seats,Subtotal (RM),Discount (RM),Amount Paid (RM),Payment Method,Transaction ID,Payment Date");
+            foreach (var booking in bookings)
+            {
+                var seats = string.Join(" | ", booking.BookingSeats.Select(x => x.Seat?.SeatCode));
+                var fields = new[]
+                {
+                    Csv(booking.BookingReference),
+                    Csv(booking.User?.FullName),
+                    Csv(booking.User?.Email),
+                    Csv(booking.Showtime?.Movie?.Title),
+                    Csv(booking.Showtime?.CinemaHall?.HallName),
+                    Csv(booking.Showtime?.StartTime.ToString("yyyy-MM-dd HH:mm")),
+                    Csv(seats),
+                    booking.SubTotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    booking.DiscountAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    booking.TotalAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture),
+                    Csv(booking.Payment?.PaymentMethod),
+                    Csv(booking.Payment?.TransactionId),
+                    Csv(booking.Payment?.PaidAt.ToString("yyyy-MM-dd HH:mm"))
+                };
+                csv.AppendLine(string.Join(",", fields));
+            }
+
+            var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray();
+            return File(bytes, "text/csv; charset=utf-8", $"CiMYTict-Confirmed-Bookings-{CinemaClock.Today:yyyyMMdd}.csv");
+        }
+
     }
 }
