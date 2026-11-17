@@ -336,3 +336,21 @@ header { position: relative; z-index: 1100; }
 @media (prefers-reduced-motion: reduce) {
   .movie-card, .movie-poster, .poster-overlay { transition:none!important; }
 }
+
+
+/* User profile photos and printable admin reports. */
+.profile-avatar-nav { width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,.55); }
+.profile-avatar-large { width:116px; height:116px; border-radius:50%; object-fit:cover; border:4px solid #e9edf4; box-shadow:0 8px 24px rgba(0,0,0,.14); }
+.profile-avatar-placeholder { width:116px; height:116px; display:grid; place-items:center; border-radius:50%; color:#fff; background:linear-gradient(135deg,#29364a,#111824); font-size:3.5rem; }
+.payment-page { overflow:hidden; color:#18202d; border-radius:20px; }
+.payment-header { background:linear-gradient(135deg,#151d2b,#303d53); }
+.payment-lock { font-size:2rem; color:#ff9299; }
+.payment-summary { background:#f5f7fa; border:1px solid #e3e7ed; }
+@media print {
+  header, footer, .btn, button, .alert-dismissible, nav, .no-print { display:none!important; }
+  body { color:#111!important; background:#fff!important; }
+  .page-container { width:100%!important; max-width:none!important; padding:0!important; }
+  .card { box-shadow:none!important; border:1px solid #ddd!important; break-inside:avoid; }
+  .table { color:#111!important; }
+  canvas { max-width:100%!important; }
+}
