@@ -32,6 +32,23 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     DbInitializer.Initialize(context, app.Environment.IsDevelopment());
+
+    // EnsureCreated() only creates a new database; it does not add columns to an
+    // existing database. Keep this small, idempotent schema patch here so older
+    // CiMYTict databases receive the cancellation-request columns on startup.
+    context.Database.ExecuteSqlRaw("""
+        IF OBJECT_ID(N'dbo.Bookings', N'U') IS NULL
+            THROW 51000, 'CiMYTict database is missing dbo.Bookings. Check DefaultConnection.', 1;
+
+        IF COL_LENGTH(N'dbo.Bookings', N'CancellationReason') IS NULL
+            ALTER TABLE dbo.Bookings ADD CancellationReason NVARCHAR(500) NULL;
+
+        IF COL_LENGTH(N'dbo.Bookings', N'CancellationRequestedAt') IS NULL
+            ALTER TABLE dbo.Bookings ADD CancellationRequestedAt DATETIME2 NULL;
+
+        IF COL_LENGTH(N'dbo.Bookings', N'CancellationDecision') IS NULL
+            ALTER TABLE dbo.Bookings ADD CancellationDecision NVARCHAR(20) NULL;
+        """);
 }
 
 if (!app.Environment.IsDevelopment())
