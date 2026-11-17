@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using CiMYTict.Services;
-using CiMYTict.ViewModels;
 using CiMYTict.Data;
 using CiMYTict.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -17,29 +15,19 @@ namespace CiMYTict.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index(string? search, string? genre)
+        public async Task<IActionResult> Index()
         {
             var now = CinemaClock.Now;
-            var query = _context.Movies
-                .Where(m => m.IsActive)
-                .Include(m => m.Showtimes.Where(s => s.StartTime >= now))
-                .AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(m => m.Title.Contains(search));
-
-            if (!string.IsNullOrWhiteSpace(genre))
-                query = query.Where(m => m.Genre.Contains(genre));
-
-            ViewBag.Search = search;
-            ViewBag.Genre = genre;
-            ViewBag.Genres = await _context.Movies
-                .Where(m => m.IsActive)
-                .Select(m => m.Genre)
-                .Distinct()
+            // Only include active movies that have at least one upcoming showtime.
+            // No tracking keeps this read-only landing-page query lightweight.
+            var movies = await _context.Movies
+                .AsNoTracking()
+                .Where(m => m.IsActive && m.Showtimes.Any(s => s.StartTime >= now))
+                .OrderByDescending(m => m.ReleaseDate)
+                .ThenBy(m => m.Title)
                 .ToListAsync();
 
-            return View(await query.OrderByDescending(m => m.ReleaseDate).ToListAsync());
+            return View(movies);
         }
 
         public async Task<IActionResult> MovieDetails(int id)
@@ -56,6 +44,6 @@ namespace CiMYTict.Controllers
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error() =>
-            View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            View(new CiMYTict.ViewModels.ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }
