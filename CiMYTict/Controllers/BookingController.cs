@@ -210,14 +210,6 @@ namespace CiMYTict.Controllers
             });
         }
 
-        // STEP D0: Open a separate payment review page before confirming a transaction.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Payment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod)
-        {
-            return RedirectToAction(nameof(Payment), new { bookingId, promoCode, redeemPoints, paymentMethod });
-        }
-
         [HttpGet]
         public async Task<IActionResult> Payment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod)
         {
