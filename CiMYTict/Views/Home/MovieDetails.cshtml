@@ -4,7 +4,7 @@
     ViewData["Title"] = Model.Title;
 }
 
-<div class="row g-4 bg-white p-4 rounded shadow-sm">
+<div class="row g-4 bg-white p-4 rounded shadow-sm movie-details-card">
     <div class="col-md-4 text-center">
         <img src="@(Model.PosterUrl ?? "https://placehold.co/400x600?text=CiMYTict")"
              class="img-fluid rounded shadow" alt="@Model.Title" />
@@ -34,7 +34,7 @@
                 @foreach (var st in Model.Showtimes.OrderBy(s => s.StartTime))
                 {
                     <div class="col-sm-6 col-lg-4">
-                        <div class="border rounded p-3 bg-light h-100 d-flex flex-column justify-content-between">
+                        <div class="border rounded p-3 bg-light h-100 d-flex flex-column justify-content-between showtime-choice-card">
                             <div>
                                 <div class="fw-bold text-danger">@st.StartTime.ToString("ddd, dd MMM yyyy")</div>
                                 <div class="fs-5 fw-bold">@st.StartTime.ToString("hh:mm tt")</div>
