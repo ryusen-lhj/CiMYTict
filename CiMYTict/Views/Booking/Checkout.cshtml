@@ -16,7 +16,7 @@
                 <div class="small text-muted">@Model.Booking.Showtime?.CinemaHall?.HallName &bull; @Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</div>
                 <div class="mt-2"><strong>Seats:</strong> @string.Join(", ", Model.Booking.BookingSeats.Select(bs => $"{bs.Seat?.SeatCode} ({bs.Seat?.Category})"))</div>
             </div>
-            <form asp-action="ConfirmPayment" method="post" id="checkoutForm">
+            <form asp-action="Payment" method="post" id="checkoutForm">
                 <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
                 <div class="mb-3">
                     <label class="form-label fw-semibold" for="promoCodeSelect">Promo Code</label>
@@ -64,7 +64,7 @@
                         <option value="FPX Online Banking">FPX Online Banking</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold"><i class="bi bi-lock-fill me-1"></i>Pay &amp; Generate E-Ticket</button>
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold"><i class="bi bi-lock-fill me-1"></i>Continue to Secure Payment</button>
             </form>
         </div>
     </div>
