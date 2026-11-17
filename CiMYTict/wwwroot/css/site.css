@@ -230,3 +230,18 @@ header { position: relative; z-index: 1100; }
   .admin-form-heading > .btn { width: 100%; }
   .admin-table-card { overflow-x: auto; }
 }
+
+
+/* Keep dark-theme inherited text readable on the light movie/showtime panel and checkout card. */
+.movie-details-card { color: #171c25 !important; }
+.movie-details-card h2, .movie-details-card h4, .movie-details-card h5,
+.movie-details-card p, .movie-details-card .lead, .movie-details-card .small,
+.movie-details-card .text-muted { color: #171c25 !important; }
+.movie-details-card .showtime-choice-card { color: #171c25; }
+.movie-details-card .showtime-choice-card .text-muted { color: #515b69 !important; }
+.movie-details-card .showtime-choice-card .text-danger { color: #c62838 !important; }
+.checkout-summary { color: #171c25; }
+.checkout-summary h4, .checkout-summary h5, .checkout-summary strong,
+.checkout-summary .form-label, .checkout-summary .form-check-label,
+.checkout-summary .summary-value { color: #171c25 !important; }
+.checkout-summary .text-muted { color: #596273 !important; }
