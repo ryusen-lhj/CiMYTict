@@ -185,6 +185,33 @@ namespace CiMYTict.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetSeatsToStandard(int id)
+        {
+            var hall = await _context.CinemaHalls.Include(h => h.Seats)
+                .FirstOrDefaultAsync(h => h.CinemaHallId == id);
+            if (hall == null) return NotFound();
+
+            bool hasBookings = await _context.Bookings.AnyAsync(b =>
+                b.Showtime != null && b.Showtime.CinemaHallId == id);
+            if (hasBookings)
+            {
+                TempData["Error"] = "This hall has booking records. Seat categories cannot be reset because existing tickets must remain valid.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+            foreach (var seat in hall.Seats)
+            {
+                seat.Category = SeatCategory.Standard;
+                seat.ExtraPrice = 0m;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = $"All {hall.Seats.Count} seats in '{hall.HallName}' are now Standard with RM0.00 surcharge.";
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
         private void ValidateCapacity(CinemaHallType type, int capacity)
         {
             (int min, int max, string label) = type switch
