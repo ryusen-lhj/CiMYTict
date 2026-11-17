@@ -130,8 +130,11 @@ namespace CiMYTict.Controllers
                 hall.SeatsPerRow = seatsPerRow;
                 await _context.SaveChangesAsync();
 
+                // A resized layout has a different number of seats, so the previous
+                // per-seat selections cannot safely map to the new seat coordinates.
+                // Recreate the new layout as Standard; the admin can then assign
+                // VIP/Couple categories on the next edit.
                 var replacementSeats = new List<Seat>();
-                int index = 0;
                 for (int r = 0; r < totalRows; r++)
                 {
                     string rowLabel = ((char)('A' + r)).ToString();
@@ -142,10 +145,9 @@ namespace CiMYTict.Controllers
                             CinemaHallId = hall.CinemaHallId,
                             RowLabel = rowLabel,
                             SeatNumber = s,
-                            Category = seatCategories[index],
-                            ExtraPrice = extraPrices[index]
+                            Category = SeatCategory.Standard,
+                            ExtraPrice = 0m
                         });
-                        index++;
                     }
                 }
                 _context.Seats.AddRange(replacementSeats);
