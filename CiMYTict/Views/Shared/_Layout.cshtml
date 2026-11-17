@@ -11,25 +11,28 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">CiMYTict</a>
+        <nav class="navbar navbar-expand-lg navbar-dark cinema-navbar">
+            <div class="container">
+                <a class="navbar-brand cinema-brand" asp-controller="Home" asp-action="Index">
+                    <span class="brand-mark"><i class="bi bi-camera-reels-fill"></i></span>
+                    <span>CiMY<span class="brand-accent">Tict</span></span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Movies</a></li>
+                    <ul class="navbar-nav me-auto align-items-lg-center">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="bi bi-film me-1"></i>Movies</a></li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="MyBookings">My Bookings</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="MyBookings"><i class="bi bi-ticket-perforated me-1"></i>My Bookings</a></li>
                         }
                         @if (User.IsInRole("Staff"))
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
-                                <ul class="dropdown-menu">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-grid me-1"></i>Admin</a>
+                                <ul class="dropdown-menu dropdown-menu-dark">
                                     <li><a class="dropdown-item" asp-controller="AdminDashboard" asp-action="Index">Dashboard</a></li>
                                     <li><a class="dropdown-item" asp-controller="Movies" asp-action="Index">Movies</a></li>
                                     <li><a class="dropdown-item" asp-controller="Showtimes" asp-action="Index">Showtimes</a></li>
@@ -39,27 +42,27 @@
                             </li>
                         }
                     </ul>
-                    <ul class="navbar-nav">
+                    <ul class="navbar-nav align-items-lg-center gap-lg-2">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Profile">@User.Identity.Name</a></li>
+                            <li class="nav-item"><a class="nav-link account-link" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-circle me-1"></i>@User.Identity.Name</a></li>
                             <li class="nav-item">
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-link nav-link">Logout</button>
+                                    <button type="submit" class="btn btn-outline-light btn-sm nav-logout">Logout</button>
                                 </form>
                             </li>
                         }
                         else
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Login</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Register">Register</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Sign in</a></li>
+                            <li class="nav-item"><a class="btn btn-cinema-primary btn-sm px-3" asp-controller="Account" asp-action="Register">Get Started</a></li>
                         }
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container page-container">
         @if (TempData["Success"] is string ok)
         {
             <div class="alert alert-success alert-dismissible fade show" role="alert">@ok<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
@@ -68,14 +71,15 @@
         {
             <div class="alert alert-danger alert-dismissible fade show" role="alert">@err<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>
         }
-        <main role="main" class="pb-3">
+        <main role="main" class="pb-5">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CiMYTict
+    <footer class="cinema-footer">
+        <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+            <span><strong>CiMYTict</strong> <span class="footer-muted">— Your next favourite movie starts here.</span></span>
+            <span class="footer-muted">&copy; 2026 CiMYTict. All rights reserved.</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
