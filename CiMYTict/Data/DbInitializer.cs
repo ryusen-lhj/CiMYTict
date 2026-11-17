@@ -158,27 +158,15 @@ namespace CiMYTict.Data
                 string rowLabel = ((char)('A' + r)).ToString();
                 for (int s = 1; s <= hall.SeatsPerRow; s++)
                 {
-                    SeatCategory category = SeatCategory.Standard;
-                    decimal extraPrice = 0.00m;
-
-                    if (r == hall.TotalRows - 1) // Back row = Couple Seats
-                    {
-                        category = SeatCategory.Couple;
-                        extraPrice = 10.00m;
-                    }
-                    else if (r >= hall.TotalRows - 3) // Middle-back rows = VIP
-                    {
-                        category = SeatCategory.VIP;
-                        extraPrice = 5.00m;
-                    }
-
+                    // Every newly seeded hall starts with standard seats only.
+                    // Staff can optionally assign VIP or Couple categories later.
                     context.Seats.Add(new Seat
                     {
                         CinemaHallId = hall.CinemaHallId,
                         RowLabel = rowLabel,
                         SeatNumber = s,
-                        Category = category,
-                        ExtraPrice = extraPrice
+                        Category = SeatCategory.Standard,
+                        ExtraPrice = 0.00m
                     });
                 }
             }
