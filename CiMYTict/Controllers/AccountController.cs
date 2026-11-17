@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
 
 namespace CiMYTict.Controllers
@@ -13,10 +14,12 @@ namespace CiMYTict.Controllers
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
 
         [HttpGet]
@@ -99,6 +102,7 @@ namespace CiMYTict.Controllers
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound();
 
+            ViewBag.ProfileImagePath = user.ProfileImagePath;
             var model = new ProfileViewModel
             {
                 FullName = user.FullName,
@@ -138,6 +142,79 @@ namespace CiMYTict.Controllers
             return RedirectToAction(nameof(Profile));
         }
 
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadProfilePicture(IFormFile? profilePicture)
+        {
+            if (profilePicture == null || profilePicture.Length == 0)
+            {
+                TempData["Error"] = "Please choose an image to upload.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            const long maxBytes = 5 * 1024 * 1024;
+            if (profilePicture.Length > maxBytes)
+            {
+                TempData["Error"] = "Profile pictures must be 5 MB or smaller.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var extension = Path.GetExtension(profilePicture.FileName).ToLowerInvariant();
+            if (extension is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+            {
+                TempData["Error"] = "Only JPG, PNG and WEBP images are supported.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            // Validate the actual file signature rather than trusting the browser's content type.
+            await using var input = profilePicture.OpenReadStream();
+            var header = new byte[12];
+            var bytesRead = await input.ReadAsync(header.AsMemory(0, header.Length));
+            bool validImage = extension switch
+            {
+                ".jpg" or ".jpeg" => bytesRead >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF,
+                ".png" => bytesRead >= 8 && header.Take(8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+                ".webp" => bytesRead >= 12 && System.Text.Encoding.ASCII.GetString(header, 0, 4) == "RIFF"
+                    && System.Text.Encoding.ASCII.GetString(header, 8, 4) == "WEBP",
+                _ => false
+            };
+            if (!validImage)
+            {
+                TempData["Error"] = "The selected file is not a valid JPG, PNG or WEBP image.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            var uploadFolder = Path.Combine(_environment.WebRootPath, "uploads", "profiles");
+            Directory.CreateDirectory(uploadFolder);
+            var fileName = $"{userId}_{Guid.NewGuid():N}{extension}";
+            var physicalPath = Path.Combine(uploadFolder, fileName);
+            input.Position = 0;
+            await using (var output = new FileStream(physicalPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                await input.CopyToAsync(output);
+
+            var oldImage = user.ProfileImagePath;
+            user.ProfileImagePath = $"/uploads/profiles/{fileName}";
+            await _context.SaveChangesAsync();
+            await SignInUserAsync(user);
+
+            // Remove only a previous file stored in this application's profile upload folder.
+            if (!string.IsNullOrWhiteSpace(oldImage) && oldImage.StartsWith("/uploads/profiles/", StringComparison.Ordinal))
+            {
+                var oldName = Path.GetFileName(oldImage);
+                var oldPath = Path.Combine(uploadFolder, oldName);
+                if (System.IO.File.Exists(oldPath) && !string.Equals(oldPath, physicalPath, StringComparison.OrdinalIgnoreCase))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            TempData["Success"] = "Profile picture updated successfully.";
+            return RedirectToAction(nameof(Profile));
+        }
+
         public IActionResult AccessDenied() => View();
 
         private async Task SignInUserAsync(User user)
@@ -149,6 +226,9 @@ namespace CiMYTict.Controllers
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             };
+
+            if (!string.IsNullOrWhiteSpace(user.ProfileImagePath))
+                claims.Add(new Claim("ProfileImagePath", user.ProfileImagePath));
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
