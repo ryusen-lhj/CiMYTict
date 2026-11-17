@@ -12,6 +12,23 @@
                 <span class="badge bg-warning text-dark">@Model.Role</span>
             </div>
             <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    @if (!string.IsNullOrWhiteSpace((string?)ViewBag.ProfileImagePath))
+                    {
+                        <img src="@ViewBag.ProfileImagePath" alt="Profile picture" class="profile-avatar-large mb-3" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder mx-auto mb-3"><i class="bi bi-person-fill"></i></div>
+                    }
+                    <h6 class="fw-bold mb-1">Profile picture</h6>
+                    <p class="text-muted small mb-3">JPG, PNG or WEBP · Maximum 5 MB</p>
+                    <form asp-action="UploadProfilePicture" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                        <input type="file" name="profilePicture" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" class="form-control" required />
+                        <button type="submit" class="btn btn-outline-danger text-nowrap"><i class="bi bi-camera me-1"></i>Upload photo</button>
+                    </form>
+                </div>
+                <hr class="mb-4" />
                 <div class="alert alert-info d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-star-fill text-warning me-2"></i>CiMYTict Reward Points</span>
                     <strong class="fs-5">@Model.RewardPoints pts</strong>
