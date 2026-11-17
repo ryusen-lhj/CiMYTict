@@ -35,6 +35,12 @@ namespace CiMYTict.Models
 
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
+        public DateTime? CancellationRequestedAt { get; set; }
+        [StringLength(20)]
+        public string? CancellationDecision { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Module 5: Temporary seat lock expiration (e.g., 10 mins from creation)
