@@ -1,53 +1,61 @@
-﻿@model CiMYTict.ViewModels.CheckoutViewModel
+@model CiMYTict.ViewModels.CheckoutViewModel
 @{
     ViewData["Title"] = "Checkout & Payment";
     var secondsLeft = Math.Max(0, (int)(Model.Booking.LockExpiresAt!.Value - DateTime.UtcNow).TotalSeconds);
 }
-
 <div class="row justify-content-center">
-    <div class="col-md-7">
+    <div class="col-lg-8">
         <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
             <span><i class="bi bi-hourglass-split me-1"></i>Seats locked! Complete payment before timer expires:</span>
             <strong id="countdown" class="fs-5 text-danger">10:00</strong>
         </div>
-
-        <div class="card shadow-sm border-0 p-4">
+        <div class="card shadow-sm border-0 p-4 checkout-summary">
             <h4 class="fw-bold mb-3">Checkout Summary</h4>
             <div class="bg-light p-3 rounded mb-3">
                 <h5 class="fw-bold mb-1">@Model.Booking.Showtime?.Movie?.Title</h5>
-                <div class="small text-muted">
-                    @Model.Booking.Showtime?.CinemaHall?.HallName &bull; @Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")
-                </div>
-                <div class="mt-2">
-                    <strong>Seats:</strong>
-                    @string.Join(", ", Model.Booking.BookingSeats.Select(bs => $"{bs.Seat?.SeatCode} ({bs.Seat?.Category})"))
-                </div>
-                <div class="mt-2 fs-5 fw-bold text-danger">
-                    Subtotal: RM @Model.Booking.SubTotal.ToString("F2")
-                </div>
+                <div class="small text-muted">@Model.Booking.Showtime?.CinemaHall?.HallName &bull; @Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</div>
+                <div class="mt-2"><strong>Seats:</strong> @string.Join(", ", Model.Booking.BookingSeats.Select(bs => $"{bs.Seat?.SeatCode} ({bs.Seat?.Category})"))</div>
             </div>
-
-            <form asp-action="ConfirmPayment" method="post">
+            <form asp-action="ConfirmPayment" method="post" id="checkoutForm">
                 <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
-
-                <!-- Promo Code (Module 7) -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Promo Code (Optional)</label>
-                    <input type="text" name="promoCode" class="form-control text-uppercase" placeholder="Try CIMY20 or STUDENT10" />
+                    <label class="form-label fw-semibold" for="promoCodeSelect">Promo Code</label>
+                    <select name="promoCode" id="promoCodeSelect" class="form-select">
+                        <option value="">No promo code</option>
+                        @foreach (var promo in Model.AvailablePromotions)
+                        {
+                            <option value="@promo.Code" data-percent="@promo.DiscountPercentage" data-max="@promo.MaxDiscountAmount">@promo.Code — @promo.Description</option>
+                        }
+                    </select>
+                    @if (!Model.AvailablePromotions.Any())
+                    {
+                        <div class="form-text">There are currently no active promo codes.</div>
+                    }
+                    else
+                    {
+                        <div class="form-text">Choose one of the active promo codes above.</div>
+                    }
                 </div>
-
-                <!-- Reward Points Redemption (Module 7) -->
                 @if (Model.AvailableUserPoints >= 100)
                 {
                     <div class="form-check bg-info bg-opacity-10 p-3 rounded mb-3">
                         <input class="form-check-input ms-0 me-2" type="checkbox" name="redeemPoints" value="true" id="redeemChk" />
-                        <label class="form-check-label fw-semibold" for="redeemChk">
-                            Redeem Reward Points (Available: @Model.AvailableUserPoints pts = up to RM @((Model.AvailableUserPoints / 100m).ToString("F2")) off)
-                        </label>
+                        <label class="form-check-label fw-semibold" for="redeemChk">Redeem Reward Points (Available: @Model.AvailableUserPoints pts)</label>
+                        <div class="small text-muted mt-1">100 points = RM1.00 discount. You can preview the discount below.</div>
                     </div>
                 }
-
-                <!-- Payment Method (Module 6) -->
+                else
+                {
+                    <div class="alert alert-light border small">You need at least 100 reward points to redeem a discount. Current balance: @Model.AvailableUserPoints pts.</div>
+                }
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2"><span>Ticket subtotal</span><strong>RM <span id="subtotalValue">@Model.Booking.SubTotal.ToString("F2")</span></strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Promo discount</span><strong>− RM <span id="promoDiscount">0.00</span></strong></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Reward points discount</span><strong>− RM <span id="pointsDiscount">0.00</span></strong></div>
+                    <hr />
+                    <div class="d-flex justify-content-between fs-5"><strong>Estimated total</strong><strong class="text-danger">RM <span id="finalTotal">@Model.Booking.SubTotal.ToString("F2")</span></strong></div>
+                    <div class="small text-muted mt-2" id="pointsUsedText">No reward points will be used.</div>
+                </div>
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Payment Method</label>
                     <select name="paymentMethod" class="form-select">
@@ -56,31 +64,50 @@
                         <option value="FPX Online Banking">FPX Online Banking</option>
                     </select>
                 </div>
-
-                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
-                    <i class="bi bi-lock-fill me-1"></i>Pay &amp; Generate E-Ticket
-                </button>
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold"><i class="bi bi-lock-fill me-1"></i>Pay &amp; Generate E-Ticket</button>
             </form>
         </div>
     </div>
 </div>
-
 @section Scripts {
-    <script>
-        let remaining = @secondsLeft;
-        const el = document.getElementById('countdown');
-        const timer = setInterval(() => {
-            if (remaining <= 0) {
-                clearInterval(timer);
-                el.textContent = "EXPIRED";
-                alert("Your seat lock has expired.");
-                window.location.href = "/";
-                return;
-            }
-            const mins = Math.floor(remaining / 60);
-            const secs = remaining % 60;
-            el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-            remaining--;
-        }, 1000);
-    </script>
+<script>
+    const subtotal = @Model.Booking.SubTotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    const availablePoints = @Model.AvailableUserPoints;
+    const promoSelect = document.getElementById('promoCodeSelect');
+    const redeemCheck = document.getElementById('redeemChk');
+    function updateCheckoutTotal() {
+        const option = promoSelect.options[promoSelect.selectedIndex];
+        const percent = Number(option?.dataset.percent || 0);
+        const maxDiscount = Number(option?.dataset.max || 0);
+        const promoDiscount = Math.min(subtotal * percent / 100, maxDiscount);
+        const remaining = Math.max(0, subtotal - promoDiscount);
+        let points = 0;
+        if (redeemCheck?.checked) {
+            const maxPoints = Math.min(availablePoints, Math.floor(remaining) * 100);
+            points = Math.floor(maxPoints / 100) * 100;
+        }
+        const pointsDiscount = points / 100;
+        document.getElementById('promoDiscount').textContent = promoDiscount.toFixed(2);
+        document.getElementById('pointsDiscount').textContent = pointsDiscount.toFixed(2);
+        document.getElementById('finalTotal').textContent = Math.max(0, remaining - pointsDiscount).toFixed(2);
+        document.getElementById('pointsUsedText').textContent = points > 0
+            ? points.toLocaleString() + ' reward points will be redeemed.'
+            : 'No reward points will be used.';
+    }
+    promoSelect.addEventListener('change', updateCheckoutTotal);
+    redeemCheck?.addEventListener('change', updateCheckoutTotal);
+    updateCheckoutTotal();
+
+    let remainingSeconds = @secondsLeft;
+    const countdown = document.getElementById('countdown');
+    const timer = setInterval(() => {
+        if (remainingSeconds <= 0) {
+            clearInterval(timer); countdown.textContent = 'EXPIRED';
+            alert('Your seat lock has expired. Please select seats again.');
+            window.location.href = '/'; return;
+        }
+        countdown.textContent = Math.floor(remainingSeconds / 60) + ':' + String(remainingSeconds % 60).padStart(2, '0');
+        remainingSeconds--;
+    }, 1000);
+</script>
 }
