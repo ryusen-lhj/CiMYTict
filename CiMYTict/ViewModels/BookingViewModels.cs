@@ -13,6 +13,7 @@ namespace CiMYTict.ViewModels
     {
         public Booking Booking { get; set; } = null!;
         public int AvailableUserPoints { get; set; }
+        public List<Promotion> AvailablePromotions { get; set; } = new();
         public string? PromoCode { get; set; }
         public bool RedeemPoints { get; set; }
         public string PaymentMethod { get; set; } = "Credit / Debit Card";
