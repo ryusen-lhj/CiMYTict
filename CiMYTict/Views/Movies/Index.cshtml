@@ -1,0 +1,56 @@
+﻿@* Views/Movies/Index.cshtml *@
+@model IEnumerable<CiMYTict.Models.Movie>
+@{
+    ViewData["Title"] = "Manage Movies";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold">Movies Catalog</h2>
+    <a asp-action="Create" class="btn btn-danger"><i class="bi bi-plus-lg me-1"></i>Add Movie</a>
+</div>
+
+<div class="table-responsive bg-white shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Poster</th>
+                <th>Title</th>
+                <th>Genre</th>
+                <th>Duration</th>
+                <th>Rating</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <img src="@(item.PosterUrl ?? "https://placehold.co/60x90?text=No+Poster")" alt="@item.Title" style="width:50px;height:75px;object-fit:cover;" class="rounded" />
+                    </td>
+                    <td class="fw-semibold">@item.Title</td>
+                    <td>@item.Genre</td>
+                    <td>@item.DurationMinutes mins</td>
+                    <td><span class="badge bg-secondary">@item.AgeRating</span></td>
+                    <td>
+                        @if (item.IsActive)
+                        {
+                            <span class="badge bg-success">Showing</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Archived</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Edit" asp-route-id="@item.MovieId" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form asp-action="Delete" asp-route-id="@item.MovieId" method="post" class="d-inline" onsubmit="return confirm('Archive this movie?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Archive</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

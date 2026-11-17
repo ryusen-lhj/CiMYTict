@@ -1,0 +1,41 @@
+@model IEnumerable<CiMYTict.Models.Showtime>
+@{
+    ViewData["Title"] = "Manage Showtimes";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold">Showtimes</h2>
+    <a asp-action="Create" class="btn btn-danger">Schedule Showtime</a>
+</div>
+
+<div class="table-responsive bg-white shadow-sm rounded">
+    <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Movie</th>
+                <th>Hall</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Base Price</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@s.Movie?.Title</td>
+                    <td>@s.CinemaHall?.HallName</td>
+                    <td>@s.StartTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                    <td>@s.EndTime.ToString("hh:mm tt")</td>
+                    <td>RM @s.BaseTicketPrice.ToString("F2")</td>
+                    <td class="text-end">
+                        <form asp-action="Delete" asp-route-id="@s.ShowtimeId" method="post" class="d-inline" onsubmit="return confirm('Delete this showtime?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

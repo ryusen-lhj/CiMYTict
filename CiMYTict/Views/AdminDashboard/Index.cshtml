@@ -1,0 +1,201 @@
+﻿@model CiMYTict.ViewModels.AdminDashboardViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Staff Sales & Analytics Dashboard";
+    var movieLabels = JsonSerializer.Serialize(Model.MovieSales.Select(m => m.MovieTitle));
+    var movieRevenues = JsonSerializer.Serialize(Model.MovieSales.Select(m => m.Revenue));
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow text-danger me-2"></i>CiMYTict Sales &amp; Occupancy Report</h2>
+        <small class="text-muted">Real-time box office revenue, hall utilization, and ticket transactions</small>
+    </div>
+    <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
+        <i class="bi bi-printer me-1"></i>Export / Print Report
+    </button>
+</div>
+
+<!-- KPI Revenue Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm border-start border-4 border-danger h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">TODAY'S REVENUE</div>
+                <div class="fs-3 fw-bold text-dark">RM @Model.DailyRevenue.ToString("F2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm border-start border-4 border-primary h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">LAST 7 DAYS</div>
+                <div class="fs-3 fw-bold text-dark">RM @Model.WeeklyRevenue.ToString("F2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm border-start border-4 border-success h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">THIS MONTH</div>
+                <div class="fs-3 fw-bold text-dark">RM @Model.MonthlyRevenue.ToString("F2")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card border-0 shadow-sm border-start border-4 border-warning h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-semibold">TOTAL TICKETS SOLD</div>
+                <div class="fs-3 fw-bold text-dark">@Model.TotalTicketsSold <span class="fs-6 text-muted fw-normal">seats</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts & Popular Movies -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Revenue by Movie (RM)</div>
+            <div class="card-body">
+                @if (!Model.MovieSales.Any())
+                {
+                    <p class="text-muted text-center my-5">No confirmed ticket sales recorded yet.</p>
+                }
+                else
+                {
+                    <canvas id="revenueChart" height="140"></canvas>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Top Performing Movies</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Movie</th>
+                            <th class="text-center">Tickets</th>
+                            <th class="text-end">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.MovieSales)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@item.MovieTitle</td>
+                                <td class="text-center"><span class="badge bg-dark">@item.TicketsSold</span></td>
+                                <td class="text-end fw-bold text-success">RM @item.Revenue.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Showtime Hall Occupancy -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-bold">Hall Occupancy Rates (Latest Showtimes)</div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Movie</th>
+                    <th>Hall</th>
+                    <th>Showtime</th>
+                    <th>Seats Sold</th>
+                    <th style="width: 28%;">Occupancy</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var occ in Model.ShowtimeOccupancies)
+                {
+                    string barColor = occ.OccupancyPercentage >= 75 ? "bg-success"
+                                    : occ.OccupancyPercentage >= 40 ? "bg-warning"
+                                    : "bg-info";
+                    <tr>
+                        <td class="fw-semibold">@occ.MovieTitle</td>
+                        <td>@occ.HallName</td>
+                        <td>@occ.StartTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                        <td>@occ.SoldSeats / @occ.TotalCapacity</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 10px;">
+                                    <div class="progress-bar @barColor" style="width: @occ.OccupancyPercentage%"></div>
+                                </div>
+                                <span class="small fw-semibold">@occ.OccupancyPercentage%</span>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Confirmed Bookings -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white fw-bold">Recent Confirmed Ticket Transactions</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Ref #</th>
+                    <th>Customer</th>
+                    <th>Movie</th>
+                    <th>Seats</th>
+                    <th>Paid</th>
+                    <th class="text-end">E-Ticket</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var b in Model.RecentBookings)
+                {
+                    <tr>
+                        <td><span class="badge bg-dark">@b.BookingReference</span></td>
+                        <td>@b.User?.FullName</td>
+                        <td>@b.Showtime?.Movie?.Title</td>
+                        <td>@string.Join(", ", b.BookingSeats.Select(bs => bs.Seat?.SeatCode))</td>
+                        <td class="fw-bold">RM @b.TotalAmount.ToString("F2")</td>
+                        <td class="text-end">
+                            <a asp-controller="Booking" asp-action="Ticket" asp-route-bookingId="@b.BookingId" class="btn btn-sm btn-outline-danger">
+                                View QR
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('revenueChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(movieLabels),
+                    datasets: [{
+                        label: 'Box Office Revenue (RM)',
+                        data: @Html.Raw(movieRevenues),
+                        backgroundColor: '#dc3545',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    </script>
+}

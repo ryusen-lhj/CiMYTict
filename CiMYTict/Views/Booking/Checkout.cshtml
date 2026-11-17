@@ -1,0 +1,86 @@
+﻿@model CiMYTict.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout & Payment";
+    var secondsLeft = Math.Max(0, (int)(Model.Booking.LockExpiresAt!.Value - DateTime.UtcNow).TotalSeconds);
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
+            <span><i class="bi bi-hourglass-split me-1"></i>Seats locked! Complete payment before timer expires:</span>
+            <strong id="countdown" class="fs-5 text-danger">10:00</strong>
+        </div>
+
+        <div class="card shadow-sm border-0 p-4">
+            <h4 class="fw-bold mb-3">Checkout Summary</h4>
+            <div class="bg-light p-3 rounded mb-3">
+                <h5 class="fw-bold mb-1">@Model.Booking.Showtime?.Movie?.Title</h5>
+                <div class="small text-muted">
+                    @Model.Booking.Showtime?.CinemaHall?.HallName &bull; @Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")
+                </div>
+                <div class="mt-2">
+                    <strong>Seats:</strong>
+                    @string.Join(", ", Model.Booking.BookingSeats.Select(bs => $"{bs.Seat?.SeatCode} ({bs.Seat?.Category})"))
+                </div>
+                <div class="mt-2 fs-5 fw-bold text-danger">
+                    Subtotal: RM @Model.Booking.SubTotal.ToString("F2")
+                </div>
+            </div>
+
+            <form asp-action="ConfirmPayment" method="post">
+                <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
+
+                <!-- Promo Code (Module 7) -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Promo Code (Optional)</label>
+                    <input type="text" name="promoCode" class="form-control text-uppercase" placeholder="Try CIMY20 or STUDENT10" />
+                </div>
+
+                <!-- Reward Points Redemption (Module 7) -->
+                @if (Model.AvailableUserPoints >= 100)
+                {
+                    <div class="form-check bg-info bg-opacity-10 p-3 rounded mb-3">
+                        <input class="form-check-input ms-0 me-2" type="checkbox" name="redeemPoints" value="true" id="redeemChk" />
+                        <label class="form-check-label fw-semibold" for="redeemChk">
+                            Redeem Reward Points (Available: @Model.AvailableUserPoints pts = up to RM @((Model.AvailableUserPoints / 100m).ToString("F2")) off)
+                        </label>
+                    </div>
+                }
+
+                <!-- Payment Method (Module 6) -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Payment Method</label>
+                    <select name="paymentMethod" class="form-select">
+                        <option value="Credit / Debit Card">Credit / Debit Card</option>
+                        <option value="Touch 'n Go eWallet">Touch 'n Go eWallet</option>
+                        <option value="FPX Online Banking">FPX Online Banking</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-lg w-100 fw-bold">
+                    <i class="bi bi-lock-fill me-1"></i>Pay &amp; Generate E-Ticket
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let remaining = @secondsLeft;
+        const el = document.getElementById('countdown');
+        const timer = setInterval(() => {
+            if (remaining <= 0) {
+                clearInterval(timer);
+                el.textContent = "EXPIRED";
+                alert("Your seat lock has expired.");
+                window.location.href = "/";
+                return;
+            }
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            el.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            remaining--;
+        }, 1000);
+    </script>
+}

@@ -1,0 +1,41 @@
+@model CiMYTict.Models.CinemaHall
+@{
+    ViewData["Title"] = "Add Hall";
+}
+
+<h2 class="fw-bold mb-3">Add Cinema Hall</h2>
+<form asp-action="Create" method="post" class="card p-4 shadow-sm border-0 col-md-6">
+    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+    <div class="mb-3">
+        <label asp-for="HallName" class="form-label">Hall Name</label>
+        <input asp-for="HallName" class="form-control" />
+        <span asp-validation-for="HallName" class="text-danger small"></span>
+    </div>
+    <div class="row">
+        <div class="col-6 mb-3">
+            <label asp-for="TotalRows" class="form-label">Rows (1-26)</label>
+            <input asp-for="TotalRows" type="number" min="1" max="26" class="form-control" />
+            <span asp-validation-for="TotalRows" class="text-danger small"></span>
+        </div>
+        <div class="col-6 mb-3">
+            <label asp-for="SeatsPerRow" class="form-label">Seats per Row</label>
+            <input asp-for="SeatsPerRow" type="number" min="1" max="30" class="form-control" />
+            <span asp-validation-for="SeatsPerRow" class="text-danger small"></span>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">VIP Rows</label>
+        <input name="vipRows" type="number" min="0" value="2" class="form-control" />
+    </div>
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="hasCoupleBackRow" value="true" id="coupleChk" checked />
+        <input type="hidden" name="hasCoupleBackRow" value="false" />
+        <label class="form-check-label" for="coupleChk">Back row is Couple seats</label>
+    </div>
+    <div>
+        <button type="submit" class="btn btn-danger">Create Hall</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,38 @@
+﻿@* Views/Account/Profile.cshtml *@
+@model CiMYTict.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Account Profile</h5>
+                <span class="badge bg-warning text-dark">@Model.Role</span>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-star-fill text-warning me-2"></i>CiMYTict Reward Points</span>
+                    <strong class="fs-5">@Model.RewardPoints pts</strong>
+                </div>
+
+                <form asp-action="Profile" method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input value="@Model.Email" class="form-control" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<CiMYTict.Models.Booking>
+@using CiMYTict.Models
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<h2 class="fw-bold mb-3">My Ticket Bookings</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You haven't booked any tickets yet. <a asp-controller="Home" asp-action="Index">Browse movies now!</a></div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var b in Model)
+        {
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-dark">@b.BookingReference</span>
+                            <span class="badge @(b.Status == BookingStatus.Confirmed ? "bg-success" : "bg-secondary")">@b.Status</span>
+                        </div>
+                        <h5 class="fw-bold mb-1">@b.Showtime?.Movie?.Title</h5>
+                        <p class="small text-muted mb-2">@b.Showtime?.CinemaHall?.HallName &bull; @b.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</p>
+                        <div class="small mb-2">
+                            <strong>Seats:</strong> @string.Join(", ", b.BookingSeats.Select(bs => bs.Seat?.SeatCode))<br />
+                            <strong>Paid:</strong> RM @b.TotalAmount.ToString("F2") (Saved RM @b.DiscountAmount.ToString("F2"))
+                        </div>
+
+                        @if (b.Status == BookingStatus.Confirmed)
+                        {
+                            <div class="d-flex gap-2 mt-3">
+                                <a asp-action="Ticket" asp-route-bookingId="@b.BookingId" class="btn btn-danger btn-sm">View E-Ticket</a>
+                                @if (b.Showtime!.StartTime > CiMYTict.Services.CinemaClock.Now.AddHours(2))
+                                {
+                                    <form asp-action="CancelBooking" asp-route-bookingId="@b.BookingId" method="post" onsubmit="return confirm('Cancel this ticket?');">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Cancel Ticket</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

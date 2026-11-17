@@ -1,0 +1,50 @@
+﻿@model CiMYTict.Models.Booking
+@{
+    ViewData["Title"] = "E-Ticket";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow border-0 overflow-hidden">
+            <div class="bg-dark text-white p-4 text-center">
+                <h4 class="fw-bold text-danger mb-0"><i class="bi bi-film me-1"></i>CiMYTict E-TICKET</h4>
+                <small class="text-secondary">Present this QR code at the cinema hall entrance</small>
+            </div>
+            <div class="card-body p-4 text-center">
+                @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
+                {
+                    <img src="data:image/png;base64,@Model.QrCodeBase64" alt="Ticket QR Code" class="img-fluid mb-3 border p-2 rounded" style="width: 200px;" />
+                }
+                <div class="badge bg-dark fs-6 mb-3">@Model.BookingReference</div>
+
+                <h4 class="fw-bold">@Model.Showtime?.Movie?.Title</h4>
+                <p class="text-muted mb-1">@Model.Showtime?.CinemaHall?.HallName</p>
+                <p class="fw-semibold text-danger">@Model.Showtime?.StartTime.ToString("dddd, dd MMM yyyy - hh:mm tt")</p>
+
+                <hr />
+                <div class="row text-start small">
+                    <div class="col-6 mb-2">
+                        <span class="text-muted d-block">Seats</span>
+                        <strong>@string.Join(", ", Model.BookingSeats.Select(bs => bs.Seat?.SeatCode))</strong>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <span class="text-muted d-block">Total Paid</span>
+                        <strong>RM @Model.TotalAmount.ToString("F2")</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted d-block">Payment Method</span>
+                        <span>@Model.Payment?.PaymentMethod</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted d-block">Transaction ID</span>
+                        <span>@Model.Payment?.TransactionId</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between">
+                <a asp-action="MyBookings" class="btn btn-outline-secondary btn-sm">My Bookings</a>
+                <button onclick="window.print()" class="btn btn-danger btn-sm"><i class="bi bi-printer me-1"></i>Print Ticket</button>
+            </div>
+        </div>
+    </div>
+</div>

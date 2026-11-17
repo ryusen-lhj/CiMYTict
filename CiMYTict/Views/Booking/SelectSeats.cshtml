@@ -1,0 +1,141 @@
+﻿@model CiMYTict.ViewModels.SeatMapViewModel
+@using CiMYTict.Models
+@{
+    ViewData["Title"] = "Select Seats";
+    var rows = Model.AllSeats.GroupBy(s => s.RowLabel).OrderBy(g => g.Key);
+}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 p-4">
+            <h4 class="fw-bold mb-1">@Model.Showtime.Movie?.Title</h4>
+            <p class="text-muted small mb-4">
+                @Model.Showtime.CinemaHall?.HallName &bull; @Model.Showtime.StartTime.ToString("ddd, dd MMM yyyy hh:mm tt")
+            </p>
+
+            <!-- Cinema Screen Bar -->
+            <div class="text-center mb-4">
+                <div class="bg-secondary text-white py-1 rounded-pill mx-auto shadow-sm" style="max-width: 80%; letter-spacing: 4px; font-size: 0.8rem;">
+                    CINEMA SCREEN
+                </div>
+            </div>
+
+            <!-- Seat Map Grid -->
+            <div class="d-flex flex-column align-items-center gap-2 overflow-auto py-2">
+                @foreach (var row in rows)
+                {
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fw-bold text-muted" style="width: 24px;">@row.Key</span>
+                        @foreach (var seat in row)
+                        {
+                            bool isOccupied = Model.OccupiedSeatIds.Contains(seat.SeatId);
+                            decimal totalPrice = Model.Showtime.BaseTicketPrice + seat.ExtraPrice;
+                            string btnClass = isOccupied
+                                ? "btn-secondary disabled"
+                                : seat.Category == SeatCategory.Couple
+                                    ? "btn-outline-danger"
+                                    : seat.Category == SeatCategory.VIP
+                                        ? "btn-outline-warning text-dark"
+                                        : "btn-outline-primary";
+
+                            <button type="button"
+                                    class="btn btn-sm seat-btn @btnClass"
+                                    style="width: 42px; height: 38px; font-size: 0.75rem;"
+                                    data-seat-id="@seat.SeatId"
+                                    data-seat-code="@seat.SeatCode"
+                                    data-seat-price="@totalPrice.ToString("F2")"
+                                    data-seat-cat="@seat.Category"
+                                @(isOccupied ? "disabled" : "")>
+                                @seat.SeatCode
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Legend -->
+            <div class="d-flex flex-wrap justify-content-center gap-3 mt-4 pt-3 border-top small">
+                <span><span class="badge bg-primary">&nbsp;&nbsp;</span> Standard (RM @Model.Showtime.BaseTicketPrice.ToString("F2"))</span>
+                <span><span class="badge bg-warning text-dark">&nbsp;&nbsp;</span> VIP (+RM 5.00)</span>
+                <span><span class="badge bg-danger">&nbsp;&nbsp;</span> Couple (+RM 10.00)</span>
+                <span><span class="badge bg-success">&nbsp;&nbsp;</span> Selected</span>
+                <span><span class="badge bg-secondary">&nbsp;&nbsp;</span> Occupied</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Summary Sidebar -->
+    <div class="col-lg-4">
+        <form asp-action="ReserveSeats" method="post" class="card shadow-sm border-0 p-4">
+            <input type="hidden" name="showtimeId" value="@Model.Showtime.ShowtimeId" />
+            <div id="hiddenInputs"></div>
+
+            <h5 class="fw-bold border-bottom pb-2">Booking Summary</h5>
+            <div class="my-3">
+                <div class="text-muted small">Selected Seats:</div>
+                <div id="selectedSeatsDisplay" class="fw-bold fs-5 text-dark">None</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center border-top pt-3 mb-3">
+                <span class="fw-semibold">Estimated Subtotal:</span>
+                <span class="fs-4 fw-bold text-danger">RM <span id="totalPriceDisplay">0.00</span></span>
+            </div>
+            <button type="submit" id="proceedBtn" class="btn btn-danger w-100 fw-semibold" disabled>
+                Lock Seats &amp; Checkout (10 Mins)
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const selected = new Map();
+        const seatBtns = document.querySelectorAll('.seat-btn:not([disabled])');
+        const displaySeats = document.getElementById('selectedSeatsDisplay');
+        const displayTotal = document.getElementById('totalPriceDisplay');
+        const hiddenInputs = document.getElementById('hiddenInputs');
+        const proceedBtn = document.getElementById('proceedBtn');
+
+        seatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id = btn.dataset.seatId;
+                const code = btn.dataset.seatCode;
+                const price = parseFloat(btn.dataset.seatPrice);
+
+                if (selected.has(id)) {
+                    selected.delete(id);
+                    btn.classList.remove('btn-success', 'text-white');
+                } else {
+                    selected.set(id, { code, price });
+                    btn.classList.add('btn-success', 'text-white');
+                }
+                updateSummary();
+            });
+        });
+
+        function updateSummary() {
+            hiddenInputs.innerHTML = '';
+            if (selected.size === 0) {
+                displaySeats.textContent = 'None';
+                displayTotal.textContent = '0.00';
+                proceedBtn.disabled = true;
+                return;
+            }
+
+            let total = 0;
+            const codes = [];
+            selected.forEach((val, id) => {
+                codes.push(val.code);
+                total += val.price;
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedSeatIds';
+                input.value = id;
+                hiddenInputs.appendChild(input);
+            });
+
+            displaySeats.textContent = codes.join(', ');
+            displayTotal.textContent = total.toFixed(2);
+            proceedBtn.disabled = false;
+        }
+    </script>
+}
