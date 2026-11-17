@@ -245,3 +245,94 @@ header { position: relative; z-index: 1100; }
 .checkout-summary .form-label, .checkout-summary .form-check-label,
 .checkout-summary .summary-value { color: #171c25 !important; }
 .checkout-summary .text-muted { color: #596273 !important; }
+
+
+/* Home page movie carousel and refreshed movie discovery cards. */
+.home-showcase {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 3.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid var(--cinema-border);
+  border-radius: 26px;
+  background:
+    radial-gradient(ellipse at 78% 45%, rgba(240,68,82,.16), transparent 36%),
+    linear-gradient(135deg, #1b2638 0%, #101722 68%, #171d2a 100%);
+  box-shadow: 0 28px 75px rgba(0,0,0,.28);
+}
+.showcase-topline { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:.8rem; }
+.showcase-kicker, .section-eyebrow { color:#ff9299; font-size:.7rem; font-weight:850; letter-spacing:.17em; }
+.showcase-live { display:inline-flex; align-items:center; gap:.5rem; color:#d9e5e1; font-size:.68rem; font-weight:800; letter-spacing:.12em; }
+.showcase-live span { width:7px; height:7px; border-radius:50%; background:#54d69a; box-shadow:0 0 0 5px rgba(84,214,154,.12); }
+.cinema-carousel { min-height:390px; }
+.cinema-carousel .carousel-inner { border-radius:18px; }
+.showcase-slide { min-height:390px; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(220px,.85fr); align-items:center; gap:2rem; padding:clamp(1rem,3vw,2.5rem) clamp(1rem,5vw,4.5rem) 3.4rem; }
+.showcase-copy { position:relative; z-index:2; max-width:650px; }
+.showcase-overline { color:#ff9299; font-size:.7rem; font-weight:800; letter-spacing:.18em; }
+.showcase-copy h1 { margin:.8rem 0 1rem; color:#fff; font-size:clamp(2.2rem,5.2vw,4.5rem); line-height:1.02; font-weight:900; letter-spacing:-.06em; overflow-wrap:anywhere; }
+.showcase-meta { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem 1rem; color:#c0cad9; font-size:.84rem; }
+.showcase-meta span { display:inline-flex; align-items:center; gap:.4rem; }
+.showcase-meta .age-rating { padding:.22rem .55rem; color:#ffe0e2; background:rgba(240,68,82,.16); border:1px solid rgba(240,68,82,.3); border-radius:6px; font-weight:800; }
+.showcase-copy p { max-width:590px; margin:1.25rem 0 1.5rem; color:#b9c4d4; font-size:.98rem; line-height:1.75; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+.showcase-book { padding:.85rem 1.25rem; }
+.showcase-art { position:relative; display:flex; align-items:center; justify-content:center; min-height:330px; }
+.showcase-art img { position:relative; z-index:1; width:min(100%,260px); height:340px; object-fit:cover; border:1px solid rgba(255,255,255,.18); border-radius:16px; box-shadow:0 28px 65px rgba(0,0,0,.55); transform:rotate(2deg); }
+.poster-glow { position:absolute; width:75%; height:75%; background:rgba(240,68,82,.25); filter:blur(65px); border-radius:50%; }
+.cinema-carousel .carousel-indicators { bottom:.35rem; margin-bottom:0; }
+.cinema-carousel .carousel-indicators [data-bs-target] { width:22px; height:4px; margin:0 4px; border:0; border-radius:5px; }
+.cinema-carousel .carousel-control-prev, .cinema-carousel .carousel-control-next { width:5%; opacity:.75; }
+.showcase-footnote { margin-top:.75rem; color:#8995a7; text-align:center; font-size:.75rem; }
+.showcase-empty { min-height:340px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:2rem; }
+.showcase-empty > i { color:#ff7781; font-size:3rem; margin-bottom:1rem; }
+.showcase-empty h2 { color:#fff; font-size:1.5rem; font-weight:800; }
+.showcase-empty p { max-width:480px; color:var(--cinema-muted); }
+.movie-section { margin-bottom:3rem; }
+.movie-count { padding:.55rem .8rem; color:#dce2ec; background:#1a2433; border:1px solid var(--cinema-border); border-radius:999px; font-size:.78rem; white-space:nowrap; }
+.movie-poster-wrap { position:relative; overflow:hidden; background:#202b3b; }
+.movie-poster { transition:transform .45s ease; }
+.movie-card:hover .movie-poster { transform:scale(1.045); }
+.poster-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:.5rem; color:#fff; font-weight:800; background:rgba(5,9,15,.55); opacity:0; transition:opacity .25s ease; }
+.poster-overlay i { font-size:1.5rem; }
+.movie-card:hover .poster-overlay { opacity:1; }
+.movie-card-meta { margin:.4rem 0 1rem; color:#a6b1c2; font-size:.82rem; }
+.movie-card-meta span { margin:0 .3rem; color:#ff7781; }
+.movie-card .card-title { font-size:1rem; line-height:1.35; }
+.movie-card .btn { border-radius:9px; }
+
+/* Hall management: consistent dark admin surfaces and optional seat-category controls. */
+.hall-admin-page { max-width:1280px; margin:0 auto 3rem; }
+.hall-admin-card { color:var(--cinema-text); background:linear-gradient(155deg,#1a2433,#131a26); border:1px solid var(--cinema-border)!important; border-radius:18px; box-shadow:0 18px 42px rgba(0,0,0,.2); }
+.hall-admin-card .form-label { color:#e8edf5; font-weight:650; }
+.hall-admin-card .form-control, .hall-admin-card .form-select { color:#f7f8fb; background-color:#202b3b; border-color:rgba(255,255,255,.13); }
+.hall-admin-card .form-select option { color:#111; }
+.hall-admin-card .form-control:focus, .hall-admin-card .form-select:focus { border-color:var(--cinema-accent); box-shadow:0 0 0 .2rem rgba(240,68,82,.15); }
+.hall-seat-map { overflow:auto; padding:1rem; background:#0e1520; border:1px solid var(--cinema-border); border-radius:14px; }
+.hall-seat-row { display:flex; align-items:center; gap:.45rem; min-width:max-content; margin-bottom:.55rem; }
+.hall-seat-row:last-child { margin-bottom:0; }
+.hall-seat-cell { width:78px; padding:.4rem; text-align:center; background:#192435; border:1px solid rgba(255,255,255,.1); border-radius:9px; }
+.hall-seat-cell small { display:block; margin-bottom:.25rem; color:#dce2ec; font-weight:800; }
+.hall-seat-cell .form-select, .hall-seat-cell .form-control { min-height:32px; padding:.2rem .25rem; font-size:.72rem; }
+.hall-seat-row-label { width:22px; color:#ff9299; font-weight:800; }
+.hall-screen-label { max-width:520px; margin:0 auto 1rem; padding:.4rem; color:#c8d2e1; background:#27354a; border-radius:50% 50% 8px 8px; text-align:center; font-size:.7rem; letter-spacing:.2em; }
+.hall-guideline { color:#b9c4d4; background:rgba(83,132,190,.12); border:1px solid rgba(104,157,218,.2); border-radius:12px; }
+.hall-table-wrap { overflow:hidden; border:1px solid var(--cinema-border); border-radius:16px; background:#151c29; box-shadow:0 16px 38px rgba(0,0,0,.18); }
+.hall-table-wrap .table { color:#e8edf5; --bs-table-bg:transparent; --bs-table-color:#e8edf5; --bs-table-hover-bg:rgba(255,255,255,.045); --bs-table-hover-color:#fff; margin:0; }
+.hall-table-wrap .table thead th { padding:1rem; color:#aeb9c9; background:#101722; border-bottom:1px solid var(--cinema-border); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; white-space:nowrap; }
+.hall-table-wrap .table td { padding:1rem; border-color:var(--cinema-border); vertical-align:middle; }
+.hall-type-pill { display:inline-block; padding:.35rem .6rem; color:#dce7f7; background:#26364c; border-radius:999px; font-size:.74rem; font-weight:700; }
+.hall-optional-note { color:#b9c4d4; font-size:.8rem; }
+@media (max-width:767.98px) {
+  .home-showcase { padding:1rem; border-radius:18px; }
+  .showcase-topline { align-items:flex-start; flex-direction:column; }
+  .cinema-carousel, .showcase-slide { min-height:0; }
+  .showcase-slide { grid-template-columns:1fr; gap:1rem; padding:1.25rem 1rem 3.4rem; }
+  .showcase-copy h1 { font-size:2.4rem; }
+  .showcase-copy p { margin:.9rem 0 1.1rem; font-size:.9rem; }
+  .showcase-art { min-height:210px; }
+  .showcase-art img { width:145px; height:205px; }
+  .cinema-carousel .carousel-control-prev, .cinema-carousel .carousel-control-next { width:8%; }
+  .movie-count { align-self:flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .movie-card, .movie-poster, .poster-overlay { transition:none!important; }
+}
