@@ -76,6 +76,7 @@ namespace CiMYTict.Controllers
             var occupiedSeatIds = await _context.BookingSeats
                 .Where(bs => bs.Booking!.ShowtimeId == showtimeId &&
                              (bs.Booking.Status == BookingStatus.Confirmed ||
+                              bs.Booking.Status == BookingStatus.CancellationRequested ||
                               (bs.Booking.Status == BookingStatus.Pending && bs.Booking.LockExpiresAt > now)))
                 .Select(bs => bs.SeatId)
                 .ToHashSetAsync();
@@ -141,6 +142,7 @@ namespace CiMYTict.Controllers
                 bs.Booking!.ShowtimeId == showtimeId &&
                 seatIds.Contains(bs.SeatId) &&
                 (bs.Booking.Status == BookingStatus.Confirmed ||
+                 bs.Booking.Status == BookingStatus.CancellationRequested ||
                  (bs.Booking.Status == BookingStatus.Pending && bs.Booking.LockExpiresAt > now)));
 
             if (conflict)
@@ -326,6 +328,7 @@ namespace CiMYTict.Controllers
                 .Include(b => b.Showtime)!.ThenInclude(s => s!.Movie)
                 .Include(b => b.Showtime)!.ThenInclude(s => s!.CinemaHall)
                 .Include(b => b.BookingSeats).ThenInclude(bs => bs.Seat)
+                .Include(b => b.Payment)
                 .Where(b => b.UserId == userId && b.Status != BookingStatus.Pending)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
