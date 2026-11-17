@@ -9,7 +9,9 @@
 <div class="row">
     <div class="col-md-6 mb-3">
         <label asp-for="Genre" class="form-label"></label>
-        <input asp-for="Genre" class="form-control" />
+        <select asp-for="Genre" asp-items="ViewBag.Genres" class="form-select">
+            <option value="">Choose a genre</option>
+        </select>
         <span asp-validation-for="Genre" class="text-danger small"></span>
     </div>
     <div class="col-md-3 mb-3">
