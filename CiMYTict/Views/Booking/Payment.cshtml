@@ -1,0 +1,52 @@
+@model CiMYTict.ViewModels.PaymentViewModel
+@{
+    ViewData["Title"] = "Secure Payment";
+}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="payment-page card border-0 shadow-lg">
+            <div class="payment-header p-4 text-center text-white">
+                <div class="payment-lock mb-2"><i class="bi bi-shield-lock-fill"></i></div>
+                <div class="small text-uppercase fw-bold opacity-75">CiMYTict checkout</div>
+                <h2 class="fw-bold mb-1">Payment Gateway</h2>
+                <p class="mb-0 opacity-75">Review your order and confirm the demo payment</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Demonstration payment page: no real card, bank or e-wallet transaction is processed. A successful confirmation records a simulated payment for this project.
+                </div>
+                <h5 class="fw-bold mb-3">Order summary</h5>
+                <div class="payment-summary rounded-3 p-3 mb-4">
+                    <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-muted">Movie</span><strong class="text-end">@Model.Booking.Showtime?.Movie?.Title</strong></div>
+                    <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-muted">Cinema hall</span><strong>@Model.Booking.Showtime?.CinemaHall?.HallName</strong></div>
+                    <div class="d-flex justify-content-between gap-3 mb-2"><span class="text-muted">Showtime</span><strong class="text-end">@Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</strong></div>
+                    <div class="d-flex justify-content-between gap-3"><span class="text-muted">Seats</span><strong class="text-end">@string.Join(", ", Model.Booking.BookingSeats.Select(x => x.Seat?.SeatCode))</strong></div>
+                </div>
+                <h5 class="fw-bold mb-3">Payment details</h5>
+                <div class="payment-summary rounded-3 p-3 mb-4">
+                    <div class="d-flex justify-content-between mb-2"><span>Subtotal</span><span>RM @Model.Booking.SubTotal.ToString("F2")</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Promo discount</span><span>− RM @Model.PromoDiscount.ToString("F2")</span></div>
+                    <div class="d-flex justify-content-between mb-2"><span>Reward points (@Model.PointsToRedeem pts)</span><span>− RM @Model.PointsDiscount.ToString("F2")</span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center"><strong class="fs-5">Total to pay</strong><strong class="fs-3 text-danger">RM @Model.TotalAmount.ToString("F2")</strong></div>
+                </div>
+                <div class="d-flex align-items-center gap-3 p-3 border rounded-3 mb-4">
+                    <i class="bi bi-credit-card-2-front fs-2 text-danger"></i>
+                    <div><div class="fw-bold">@Model.PaymentMethod</div><div class="small text-muted">Selected payment method</div></div>
+                    <span class="badge bg-secondary ms-auto">Demo</span>
+                </div>
+                <form asp-action="ConfirmPayment" method="post">
+                    <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
+                    <input type="hidden" name="promoCode" value="@Model.PromoCode" />
+                    <input type="hidden" name="redeemPoints" value="@Model.RedeemPoints.ToString().ToLowerInvariant()" />
+                    <input type="hidden" name="paymentMethod" value="@Model.PaymentMethod" />
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold">
+                        <i class="bi bi-shield-check me-2"></i>Confirm Demo Payment · RM @Model.TotalAmount.ToString("F2")
+                    </button>
+                </form>
+                <a asp-action="Checkout" asp-route-bookingId="@Model.Booking.BookingId" class="btn btn-link text-secondary w-100 mt-2">Back to checkout</a>
+            </div>
+        </div>
+    </div>
+</div>
