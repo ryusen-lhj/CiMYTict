@@ -23,6 +23,9 @@ namespace CiMYTict.Models
         // Module 7: Membership Rewards
         public int RewardPoints { get; set; } = 0;
 
+        [StringLength(300)]
+        public string? ProfileImagePath { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
