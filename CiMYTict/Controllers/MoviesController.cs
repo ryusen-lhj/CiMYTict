@@ -2,6 +2,7 @@ using CiMYTict.Data;
 using CiMYTict.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CiMYTict.Controllers
@@ -9,6 +10,12 @@ namespace CiMYTict.Controllers
     [Authorize(Roles = "Staff")]
     public class MoviesController : Controller
     {
+        private static readonly string[] AllowedGenres =
+        {
+            "Action", "Adventure", "Drama", "Horror", "Science Fiction",
+            "Thriller", "Fantasy", "Epic"
+        };
+
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
 
@@ -23,20 +30,27 @@ namespace CiMYTict.Controllers
             return View(await _context.Movies.OrderByDescending(m => m.ReleaseDate).ToListAsync());
         }
 
-        public IActionResult Create() => View();
+        public IActionResult Create()
+        {
+            LoadGenreList();
+            return View();
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Movie movie, IFormFile? posterFile)
         {
+            ValidateGenre(movie);
             ValidateTrailer(movie);
             ValidatePoster(posterFile);
-            if (!ModelState.IsValid) return View(movie);
+            if (!ModelState.IsValid)
+            {
+                LoadGenreList(movie.Genre);
+                return View(movie);
+            }
 
             if (posterFile != null && posterFile.Length > 0)
-            {
                 movie.PosterUrl = await SavePosterAsync(posterFile);
-            }
 
             _context.Movies.Add(movie);
             await _context.SaveChangesAsync();
@@ -48,6 +62,8 @@ namespace CiMYTict.Controllers
         {
             var movie = await _context.Movies.FindAsync(id);
             if (movie == null) return NotFound();
+
+            LoadGenreList(movie.Genre);
             return View(movie);
         }
 
@@ -56,9 +72,15 @@ namespace CiMYTict.Controllers
         public async Task<IActionResult> Edit(int id, Movie movie, IFormFile? posterFile)
         {
             if (id != movie.MovieId) return NotFound();
+
+            ValidateGenre(movie);
             ValidateTrailer(movie);
             ValidatePoster(posterFile);
-            if (!ModelState.IsValid) return View(movie);
+            if (!ModelState.IsValid)
+            {
+                LoadGenreList(movie.Genre);
+                return View(movie);
+            }
 
             var existing = await _context.Movies.FindAsync(id);
             if (existing == null) return NotFound();
@@ -73,9 +95,7 @@ namespace CiMYTict.Controllers
             existing.IsActive = movie.IsActive;
 
             if (posterFile != null && posterFile.Length > 0)
-            {
                 existing.PosterUrl = await SavePosterAsync(posterFile);
-            }
 
             await _context.SaveChangesAsync();
             TempData["Success"] = "Movie updated successfully.";
@@ -89,11 +109,22 @@ namespace CiMYTict.Controllers
             var movie = await _context.Movies.FindAsync(id);
             if (movie != null)
             {
-                movie.IsActive = false; // Soft delete so historical tickets remain intact
+                movie.IsActive = false;
                 await _context.SaveChangesAsync();
                 TempData["Success"] = $"Movie '{movie.Title}' archived.";
             }
             return RedirectToAction(nameof(Index));
+        }
+
+        private void LoadGenreList(string? selectedGenre = null)
+        {
+            ViewBag.Genres = new SelectList(AllowedGenres, selectedGenre);
+        }
+
+        private void ValidateGenre(Movie movie)
+        {
+            if (!AllowedGenres.Contains(movie.Genre))
+                ModelState.AddModelError(nameof(Movie.Genre), "Please select a genre from the list.");
         }
 
         private static readonly string[] AllowedPosterExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
@@ -110,7 +141,6 @@ namespace CiMYTict.Controllers
                 ModelState.AddModelError("posterFile", "Poster must be 5 MB or smaller.");
         }
 
-        // Only YouTube embed URLs may be rendered inside the trailer iframe
         private void ValidateTrailer(Movie movie)
         {
             if (string.IsNullOrWhiteSpace(movie.TrailerUrl)) { movie.TrailerUrl = null; return; }
