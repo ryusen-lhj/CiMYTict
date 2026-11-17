@@ -25,10 +25,10 @@ namespace CiMYTict.Controllers
             return View(list);
         }
 
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? movieId)
         {
-            await LoadListsAsync();
-            return View(new Showtime { StartTime = CinemaClock.Now.Date.AddDays(1).AddHours(18), BaseTicketPrice = 18.00m });
+            await LoadListsAsync(movieId);
+            return View(new Showtime { MovieId = movieId ?? 0, StartTime = CinemaClock.Now.Date.AddDays(1).AddHours(18), BaseTicketPrice = 18.00m });
         }
 
         [HttpPost]
