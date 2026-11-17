@@ -18,7 +18,8 @@ namespace CiMYTict.Models
         Pending = 0,    // Temporarily reserved (10-minute lock)
         Confirmed = 1,  // Paid & E-Ticket issued
         Cancelled = 2,
-        Expired = 3
+        Expired = 3,
+        CancellationRequested = 4
     }
 
     public enum PaymentStatus
