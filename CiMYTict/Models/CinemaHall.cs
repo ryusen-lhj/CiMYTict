@@ -10,6 +10,8 @@ namespace CiMYTict.Models
         [Required, StringLength(50)]
         public string HallName { get; set; } = string.Empty; // e.g., "Hall 1 - IMAX"
 
+        public CinemaHallType HallType { get; set; } = CinemaHallType.StandardMidSize;
+
         [Range(1, 26, ErrorMessage = "Rows must be between 1 and 26 (A-Z).")]
         public int TotalRows { get; set; }
 
