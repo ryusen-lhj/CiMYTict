@@ -338,7 +338,7 @@ namespace CiMYTict.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CancelBooking(int bookingId)
+        public async Task<IActionResult> CancelBooking(int bookingId, string reason)
         {
             int userId = CurrentUserId;
             var booking = await _context.Bookings
@@ -346,7 +346,7 @@ namespace CiMYTict.Controllers
                 .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.UserId == userId);
 
-            string reason = (Request.Form["reason"].ToString() ?? string.Empty).Trim();
+            reason = (reason ?? string.Empty).Trim();
             if (booking != null && booking.Status == BookingStatus.Confirmed &&
                 booking.Showtime!.StartTime > CinemaClock.Now.AddHours(2) &&
                 !string.IsNullOrWhiteSpace(reason) && reason.Length <= 500)
