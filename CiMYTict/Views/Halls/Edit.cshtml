@@ -1,0 +1,86 @@
+@model CiMYTict.Models.CinemaHall
+@using CiMYTict.Models
+@{
+    ViewData["Title"] = "Edit Hall";
+    var seats = Model.Seats.OrderBy(s => s.RowLabel).ThenBy(s => s.SeatNumber).ToList();
+    bool hasBookings = ViewBag.HasBookings is bool value && value;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div><h2 class="fw-bold mb-1">Edit @Model.HallName</h2><p class="text-muted mb-0">Choose a category and optional surcharge for every seat.</p></div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Back to Halls</a>
+</div>
+@if (hasBookings)
+{
+    <div class="alert alert-warning">This hall already has bookings. Its capacity, auditorium type and seat categories are locked to protect existing tickets. You may update the hall name only.</div>
+}
+<form asp-action="Edit" asp-route-id="@Model.CinemaHallId" method="post" class="card border-0 shadow-sm p-4">
+    <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <label class="form-label" for="hallName">Hall Name</label>
+            <input class="form-control" id="hallName" name="hallName" value="@Model.HallName" maxlength="50" required />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="hallType">Auditorium Type</label>
+            <select class="form-select" id="hallType" name="hallType" @(hasBookings ? "disabled" : "")>
+                <option value="0" selected="@(Model.HallType == CinemaHallType.StandardMidSize)">Standard / Mid-size (120–250)</option>
+                <option value="1" selected="@(Model.HallType == CinemaHallType.LargeFormatIMAX)">Large format / IMAX (250–500)</option>
+                <option value="2" selected="@(Model.HallType == CinemaHallType.SmallIndependent)">Small / Independent (50–120)</option>
+                <option value="3" selected="@(Model.HallType == CinemaHallType.VIPRecliner)">VIP / Recliner (40–80)</option>
+                <option value="4" selected="@(Model.HallType == CinemaHallType.CouplesThemed)">Couples / Themed (20–50)</option>
+            </select>
+            @if (hasBookings) { <input type="hidden" name="hallType" value="@((int)Model.HallType)" /> }
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="totalRows">Rows</label>
+            <input class="form-control layout-field" id="totalRows" name="totalRows" type="number" min="1" max="26" value="@Model.TotalRows" @(hasBookings ? "readonly" : "") />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="seatsPerRow">Seats / Row</label>
+            <input class="form-control layout-field" id="seatsPerRow" name="seatsPerRow" type="number" min="1" max="30" value="@Model.SeatsPerRow" @(hasBookings ? "readonly" : "") />
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-3 align-items-center mb-3">
+        <strong>Seat category selector</strong>
+        <span class="badge bg-primary">Standard</span><span class="badge bg-warning text-dark">VIP</span><span class="badge bg-danger">Couple</span>
+        <span class="text-muted small">Current capacity: @seats.Count seats</span>
+    </div>
+    <div class="text-center text-muted small mb-2">FRONT / SCREEN</div>
+    <div class="border rounded p-3 mb-4 overflow-auto">
+        @foreach (var row in seats.GroupBy(s => s.RowLabel).OrderBy(g => g.Key))
+        {
+            <div class="d-flex align-items-center gap-2 mb-2" style="min-width:max-content">
+                <strong style="width:24px">@row.Key</strong>
+                @foreach (var seat in row)
+                {
+                    <div class="border rounded p-1 text-center" style="width:76px">
+                        <small class="d-block fw-bold">@seat.SeatCode</small>
+                        <input type="hidden" name="seatIds" value="@seat.SeatId" />
+                        <select name="seatCategories" class="form-select form-select-sm mb-1" aria-label="Category for @seat.SeatCode" @(hasBookings ? "disabled" : "")>
+                            <option value="0" selected="@(seat.Category == SeatCategory.Standard)">Standard</option>
+                            <option value="1" selected="@(seat.Category == SeatCategory.VIP)">VIP</option>
+                            <option value="2" selected="@(seat.Category == SeatCategory.Couple)">Couple</option>
+                        </select>
+                        <input name="extraPrices" type="number" min="0" max="500" step="0.50" value="@seat.ExtraPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" class="form-control form-control-sm" aria-label="Extra price for @seat.SeatCode" @(hasBookings ? "readonly" : "") />
+                    </div>
+                }
+            </div>
+        }
+    </div>
+    @if (hasBookings)
+    {
+        <input type="hidden" name="hallType" value="@((int)Model.HallType)" />
+        <input type="hidden" name="totalRows" value="@Model.TotalRows" />
+        <input type="hidden" name="seatsPerRow" value="@Model.SeatsPerRow" />
+        @foreach (var seat in seats)
+        {
+            <input type="hidden" name="seatCategories" value="@((int)seat.Category)" />
+            <input type="hidden" name="extraPrices" value="@seat.ExtraPrice.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" />
+        }
+    }
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Save Hall Changes</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
