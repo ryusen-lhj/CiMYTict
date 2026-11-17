@@ -201,7 +201,10 @@ namespace CiMYTict.Controllers
             return View(new CheckoutViewModel
             {
                 Booking = booking,
-                AvailableUserPoints = user?.RewardPoints ?? 0
+                AvailableUserPoints = user?.RewardPoints ?? 0,
+                AvailablePromotions = await _context.Promotions
+                    .Where(p => p.IsActive && p.ValidFrom <= CinemaClock.Today && p.ValidUntil >= CinemaClock.Today)
+                    .OrderBy(p => p.Code).ToListAsync()
             });
         }
 
@@ -310,7 +313,7 @@ namespace CiMYTict.Controllers
                 .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && (b.UserId == userId || isStaff));
 
-            if (booking == null || booking.Status != BookingStatus.Confirmed) return NotFound();
+            if (booking == null || (booking.Status != BookingStatus.Confirmed && booking.Status != BookingStatus.CancellationRequested)) return NotFound();
             return View(booking);
         }
 
@@ -340,30 +343,80 @@ namespace CiMYTict.Controllers
                 .Include(b => b.Payment)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.UserId == userId);
 
+            string reason = (Request.Form["reason"].ToString() ?? string.Empty).Trim();
             if (booking != null && booking.Status == BookingStatus.Confirmed &&
-                booking.Showtime!.StartTime > CinemaClock.Now.AddHours(2))
+                booking.Showtime!.StartTime > CinemaClock.Now.AddHours(2) &&
+                !string.IsNullOrWhiteSpace(reason) && reason.Length <= 500)
+            {
+                booking.Status = BookingStatus.CancellationRequested;
+                booking.CancellationReason = reason;
+                booking.CancellationRequestedAt = CinemaClock.Now;
+                booking.CancellationDecision = null;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = $"Cancellation request for {booking.BookingReference} has been sent to the admin for review.";
+            }
+            else
+            {
+                TempData["Error"] = "Please provide a reason (up to 500 characters). Requests are allowed at least 2 hours before showtime.";
+            }
+
+            return RedirectToAction(nameof(MyBookings));
+        }
+
+        // Staff review queue for customer cancellation requests.
+        [Authorize(Roles = "Staff")]
+        [HttpGet]
+        public async Task<IActionResult> CancellationRequests()
+        {
+            var requests = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.Movie)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.CinemaHall)
+                .Include(b => b.BookingSeats).ThenInclude(bs => bs.Seat)
+                .Where(b => b.Status == BookingStatus.CancellationRequested)
+                .OrderBy(b => b.CancellationRequestedAt)
+                .ToListAsync();
+            return View(requests);
+        }
+
+        [Authorize(Roles = "Staff")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReviewCancellation(int bookingId, string decision)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Payment)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.Status == BookingStatus.CancellationRequested);
+            if (booking == null) return NotFound();
+
+            if (decision == "Approve")
             {
                 booking.Status = BookingStatus.Cancelled;
-                if (booking.Payment != null)
-                    booking.Payment.Status = PaymentStatus.Refunded;
+                booking.CancellationDecision = "Approved";
+                if (booking.Payment != null) booking.Payment.Status = PaymentStatus.Refunded;
 
-                // Reverse the loyalty side effects: give back redeemed points, take back earned points
-                var user = await _context.Users.FindAsync(userId);
+                var user = await _context.Users.FindAsync(booking.UserId);
                 if (user != null)
                 {
                     user.RewardPoints += booking.PointsRedeemed;
                     user.RewardPoints = Math.Max(0, user.RewardPoints - booking.PointsEarned);
                 }
-
-                await _context.SaveChangesAsync();
-                TempData["Success"] = $"Booking {booking.BookingReference} cancelled and payment marked for refund.";
+                TempData["Success"] = $"Cancellation approved for {booking.BookingReference}. Payment marked as refunded.";
+            }
+            else if (decision == "Reject")
+            {
+                booking.Status = BookingStatus.Confirmed;
+                booking.CancellationDecision = "Rejected";
+                TempData["Success"] = $"Cancellation rejected for {booking.BookingReference}. The ticket remains confirmed.";
             }
             else
             {
-                TempData["Error"] = "Tickets can only be cancelled at least 2 hours before showtime.";
+                TempData["Error"] = "Invalid cancellation decision.";
+                return RedirectToAction(nameof(CancellationRequests));
             }
 
-            return RedirectToAction(nameof(MyBookings));
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(CancellationRequests));
         }
 
         private static string GenerateQrCodeBase64(string content)
