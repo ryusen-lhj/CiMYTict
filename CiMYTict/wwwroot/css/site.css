@@ -1,31 +1,187 @@
-html {
-  font-size: 14px;
+:root {
+  --cinema-bg: #0c1019;
+  --cinema-surface: #151c29;
+  --cinema-surface-soft: #1b2433;
+  --cinema-text: #f5f7fb;
+  --cinema-muted: #a6afbf;
+  --cinema-accent: #f04452;
+  --cinema-accent-dark: #d92e40;
+  --cinema-border: rgba(255,255,255,.09);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
+html { font-size: 16px; min-height: 100%; position: relative; }
 body {
-  margin-bottom: 60px;
+  min-height: 100vh;
+  margin: 0;
+  padding-bottom: 88px;
+  color: var(--cinema-text);
+  background: radial-gradient(ellipse at 50% -20%, #202b40 0, var(--cinema-bg) 55%);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+a { color: inherit; }
+.page-container { padding-top: 2rem; }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.cinema-navbar {
+  background: rgba(10, 14, 22, .92);
+  border-bottom: 1px solid var(--cinema-border);
+  padding: .85rem 0;
+  backdrop-filter: blur(16px);
 }
+.cinema-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -.05em;
+}
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--cinema-accent), #ff785e);
+  border-radius: 12px;
+  font-size: 1.05rem;
+}
+.brand-accent { color: #ff6974; }
+.cinema-navbar .nav-link {
+  color: #c5ccda;
+  font-weight: 550;
+  padding: .65rem .85rem !important;
+  transition: color .2s ease;
+}
+.cinema-navbar .nav-link:hover, .cinema-navbar .nav-link:focus { color: #fff; }
+.cinema-navbar .dropdown-menu {
+  background: #182131;
+  border: 1px solid var(--cinema-border);
+  border-radius: 12px;
+  padding: .5rem;
+  box-shadow: 0 18px 40px rgba(0,0,0,.3);
+}
+.cinema-navbar .dropdown-item { color: #dce2ec; border-radius: 7px; padding: .55rem .75rem; }
+.cinema-navbar .dropdown-item:hover { color: #fff; background: #29364a; }
+.btn-cinema-primary, .btn-danger {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--cinema-accent), #ff665e);
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 7px 18px rgba(240,68,82,.2);
+}
+.btn-cinema-primary:hover, .btn-danger:hover {
+  background: linear-gradient(135deg, var(--cinema-accent-dark), #f04e50);
+  transform: translateY(-1px);
+}
+.nav-logout { border-radius: 9px; }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.cinema-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(2rem, 5vw, 4.5rem);
+  margin-bottom: 3rem;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 85% 15%, rgba(240,68,82,.28), transparent 28%),
+    radial-gradient(circle at 75% 100%, rgba(69,104,160,.2), transparent 35%),
+    linear-gradient(120deg, #202b3d, #111824 72%);
+  box-shadow: 0 24px 70px rgba(0,0,0,.24);
+}
+.cinema-hero::after {
+  content: "CINEMA";
+  position: absolute;
+  right: -1rem;
+  bottom: -3.4rem;
+  color: rgba(255,255,255,.035);
+  font-size: clamp(5rem, 15vw, 12rem);
+  font-weight: 900;
+  letter-spacing: -.09em;
+  pointer-events: none;
+}
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: 1rem;
+  color: #ff9299;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.cinema-hero h1 { max-width: 700px; color: #fff; font-size: clamp(2.35rem, 5vw, 4.25rem); line-height: 1.05; letter-spacing: -.055em; }
+.cinema-hero h1 span { color: #ff6875; }
+.cinema-hero .lead { max-width: 640px; color: #c0cad9; font-size: 1.05rem; line-height: 1.7; }
+.movie-search {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  padding: .65rem;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  background: rgba(7,11,18,.48);
+}
+.movie-search .form-control, .movie-search .form-select {
+  min-height: 46px;
+  color: #f7f8fb;
+  background-color: #202b3b;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 9px;
+}
+.movie-search .form-control::placeholder { color: #9da9ba; }
+.movie-search .form-select option { color: #111; }
+
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.25rem; }
+.section-heading h2 { margin: 0; color: #fff; font-size: 1.65rem; font-weight: 800; letter-spacing: -.04em; }
+.section-heading p { margin: .35rem 0 0; color: var(--cinema-muted); font-size: .9rem; }
+.movie-card {
+  overflow: hidden;
+  height: 100%;
+  color: var(--cinema-text);
+  background: linear-gradient(160deg, #1a2433, #131a26);
+  border: 1px solid var(--cinema-border) !important;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.14);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.movie-card:hover { transform: translateY(-6px); border-color: rgba(240,68,82,.45) !important; box-shadow: 0 20px 42px rgba(0,0,0,.28); }
+.movie-poster { width: 100%; height: 330px; object-fit: cover; background: #202b3b; }
+.movie-card .card-body { padding: 1.15rem; }
+.movie-card .card-title { color: #fff; font-size: 1.05rem; letter-spacing: -.02em; }
+.movie-card .text-muted, .movie-card .text-secondary { color: #a6b1c2 !important; }
+.movie-card .badge { color: #ffd9dc; background: rgba(240,68,82,.17) !important; border: 1px solid rgba(240,68,82,.24); border-radius: 6px; }
+.movie-card .btn { padding: .7rem 1rem; }
+.form-control, .form-select {
+  min-height: 44px;
+  border-color: #d9dee7;
+  border-radius: 9px;
+}
+.form-control:focus, .form-select:focus {
+  border-color: var(--cinema-accent);
+  box-shadow: 0 0 0 .2rem rgba(240,68,82,.15);
+}
+.alert { border: 0; border-radius: 12px; }
+
+.cinema-footer {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1.35rem 0;
+  color: #dce2ec;
+  background: #090d14;
+  border-top: 1px solid var(--cinema-border);
+  font-size: .88rem;
+}
+.footer-muted { color: #8792a3; }
+
+@media (max-width: 767.98px) {
+  .page-container { padding-top: 1.25rem; }
+  .cinema-hero { border-radius: 18px; margin-bottom: 2.25rem; }
+  .cinema-hero::after { font-size: 5rem; bottom: -1.5rem; }
+  .movie-poster { height: 300px; }
+  .section-heading h2 { font-size: 1.4rem; }
+  .cinema-navbar .navbar-collapse { padding-top: .8rem; }
 }
