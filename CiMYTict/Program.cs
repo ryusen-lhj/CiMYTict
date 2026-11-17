@@ -48,6 +48,9 @@ using (var scope = app.Services.CreateScope())
 
         IF COL_LENGTH(N'dbo.Bookings', N'CancellationDecision') IS NULL
             ALTER TABLE dbo.Bookings ADD CancellationDecision NVARCHAR(20) NULL;
+
+        IF COL_LENGTH(N'dbo.CinemaHalls', N'HallType') IS NULL
+            ALTER TABLE dbo.CinemaHalls ADD HallType INT NOT NULL CONSTRAINT DF_CinemaHalls_HallType DEFAULT (0);
         """);
 }
 
