@@ -45,6 +45,7 @@
                     </td>
                     <td class="text-end">
                         <a asp-action="Edit" asp-route-id="@item.MovieId" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a asp-controller="Showtimes" asp-action="Create" asp-route-movieId="@item.MovieId" class="btn btn-sm btn-outline-success">Add Showtime</a>
                         <form asp-action="Delete" asp-route-id="@item.MovieId" method="post" class="d-inline" onsubmit="return confirm('Archive this movie?');">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Archive</button>
                         </form>
