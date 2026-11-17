@@ -210,6 +210,74 @@ namespace CiMYTict.Controllers
             });
         }
 
+        // STEP D0: Open a separate payment review page before confirming a transaction.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Payment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod)
+        {
+            return RedirectToAction(nameof(Payment), new { bookingId, promoCode, redeemPoints, paymentMethod });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Payment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.Movie)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.CinemaHall)
+                .Include(b => b.BookingSeats).ThenInclude(bs => bs.Seat)
+                .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.UserId == CurrentUserId);
+
+            if (booking == null || booking.Status != BookingStatus.Pending || booking.LockExpiresAt < DateTime.UtcNow)
+            {
+                TempData["Error"] = "Your seat reservation has expired. Please select seats again.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (!AllowedPaymentMethods.Contains(paymentMethod))
+            {
+                TempData["Error"] = "Please choose a valid payment method.";
+                return RedirectToAction(nameof(Checkout), new { bookingId });
+            }
+
+            decimal promoDiscount = 0m;
+            int pointsToRedeem = 0;
+            if (!string.IsNullOrWhiteSpace(promoCode))
+            {
+                var code = promoCode.Trim().ToUpperInvariant();
+                var promo = await _context.Promotions.FirstOrDefaultAsync(p =>
+                    p.Code == code && p.IsActive &&
+                    p.ValidFrom <= CinemaClock.Today && p.ValidUntil >= CinemaClock.Today);
+                if (promo == null)
+                {
+                    TempData["Error"] = $"Promo code '{code}' is invalid or expired.";
+                    return RedirectToAction(nameof(Checkout), new { bookingId });
+                }
+                promoDiscount = Math.Min(booking.SubTotal * promo.DiscountPercentage / 100m, promo.MaxDiscountAmount);
+            }
+
+            var user = await _context.Users.FindAsync(CurrentUserId);
+            if (user == null) return Unauthorized();
+            if (redeemPoints && user.RewardPoints >= 100)
+            {
+                var remaining = Math.Max(0m, booking.SubTotal - promoDiscount);
+                var maxPoints = (int)Math.Min(user.RewardPoints, Math.Floor(remaining) * 100m);
+                pointsToRedeem = (maxPoints / 100) * 100;
+            }
+
+            var pointsDiscount = pointsToRedeem / 100m;
+            return View(new CiMYTict.ViewModels.PaymentViewModel
+            {
+                Booking = booking,
+                PaymentMethod = paymentMethod,
+                PromoCode = promoCode,
+                RedeemPoints = redeemPoints,
+                PromoDiscount = promoDiscount,
+                PointsToRedeem = pointsToRedeem,
+                PointsDiscount = pointsDiscount,
+                TotalAmount = Math.Max(0m, booking.SubTotal - promoDiscount - pointsDiscount)
+            });
+        }
+
         // STEP D: Complete Payment, Apply Discounts/Points, Generate QR Ticket
         [HttpPost]
         [ValidateAntiForgeryToken]
