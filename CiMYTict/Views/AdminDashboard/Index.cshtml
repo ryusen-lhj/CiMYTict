@@ -11,9 +11,10 @@
         <h2 class="fw-bold mb-0"><i class="bi bi-graph-up-arrow text-danger me-2"></i>CiMYTict Sales &amp; Occupancy Report</h2>
         <small class="text-muted">Real-time box office revenue, hall utilization, and ticket transactions</small>
     </div>
-    <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
-        <i class="bi bi-printer me-1"></i>Export / Print Report
-    </button>
+    <div class="d-flex flex-wrap gap-2 no-print">
+        <a asp-action="ExportCsv" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export CSV</a>
+        <button onclick="window.print()" class="btn btn-outline-dark btn-sm"><i class="bi bi-printer me-1"></i>Print Report</button>
+    </div>
 </div>
 
 <!-- KPI Revenue Cards -->
