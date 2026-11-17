@@ -16,7 +16,7 @@
                 <div class="small text-muted">@Model.Booking.Showtime?.CinemaHall?.HallName &bull; @Model.Booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</div>
                 <div class="mt-2"><strong>Seats:</strong> @string.Join(", ", Model.Booking.BookingSeats.Select(bs => $"{bs.Seat?.SeatCode} ({bs.Seat?.Category})"))</div>
             </div>
-            <form asp-action="Payment" method="post" id="checkoutForm">
+            <form asp-action="Payment" method="get" id="checkoutForm">
                 <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
                 <div class="mb-3">
                     <label class="form-label fw-semibold" for="promoCodeSelect">Promo Code</label>
