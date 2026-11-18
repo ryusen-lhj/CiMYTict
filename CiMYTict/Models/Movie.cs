@@ -24,6 +24,9 @@ namespace CiMYTict.Models
         [DataType(DataType.Date)]
         public DateTime ReleaseDate { get; set; }
 
+        [DataType(DataType.Date)]
+        public DateTime? TheaterEndDate { get; set; }
+
         public string? PosterUrl { get; set; }   // Stored in /uploads/posters/
         public string? TrailerUrl { get; set; }  // YouTube embed URL
 
