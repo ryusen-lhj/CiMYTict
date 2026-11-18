@@ -491,3 +491,146 @@ hr { color:#626a77; opacity:.5; }
   .page-container { width:calc(100% - 1.25rem); padding-top:1.2rem; }
   .cinema-navbar .navbar-collapse { background:#0e1118; }
 }
+
+
+/* Netflix-inspired global design and visitor-selectable colour themes. */
+:root {
+  color-scheme: dark;
+  --cinema-bg:#080808;
+  --cinema-surface:#181818;
+  --cinema-surface-soft:#242424;
+  --cinema-text:#f5f5f1;
+  --cinema-muted:#b3b3b3;
+  --cinema-accent:#e50914;
+  --cinema-accent-dark:#b20710;
+  --cinema-border:rgba(255,255,255,.13);
+  --theme-navbar:rgba(8,8,8,.97);
+  --theme-input:#222;
+  --theme-input-text:#fff;
+  --theme-card:#181818;
+  --theme-card-raised:#222;
+  --theme-footer:#050505;
+}
+html[data-theme="dark"] { color-scheme:dark; }
+html[data-theme="light"] {
+  color-scheme:light;
+  --cinema-bg:#f4f4f5;
+  --cinema-surface:#fff;
+  --cinema-surface-soft:#e9e9ec;
+  --cinema-text:#191919;
+  --cinema-muted:#626262;
+  --cinema-accent:#e50914;
+  --cinema-accent-dark:#b20710;
+  --cinema-border:rgba(0,0,0,.13);
+  --theme-navbar:rgba(255,255,255,.97);
+  --theme-input:#fff;
+  --theme-input-text:#191919;
+  --theme-card:#fff;
+  --theme-card-raised:#f1f1f1;
+  --theme-footer:#e8e8e8;
+}
+html[data-theme="dark"] body, html[data-theme="light"] body {
+  color:var(--cinema-text);
+  background:var(--cinema-bg);
+  background-image:none;
+}
+html[data-theme="light"] body { background-image:linear-gradient(180deg,#fff 0,#f4f4f5 360px); }
+.cinema-navbar { background:var(--theme-navbar)!important; border-bottom:1px solid var(--cinema-border)!important; }
+html[data-theme="light"] .cinema-navbar .navbar-brand,
+html[data-theme="light"] .cinema-navbar .nav-link { color:#191919!important; }
+html[data-theme="dark"] .cinema-navbar .navbar-brand,
+html[data-theme="dark"] .cinema-navbar .nav-link { color:#f5f5f1; }
+.brand-mark { color:#fff!important; background:#e50914!important; border-radius:5px!important; }
+.brand-accent { color:#e50914!important; }
+.btn-cinema-primary,.showcase-book {
+  color:#fff!important; background:#e50914!important; border:0!important;
+  border-radius:5px!important; box-shadow:none!important; font-weight:750;
+}
+.btn-cinema-primary:hover,.showcase-book:hover { color:#fff!important; background:#b20710!important; }
+.btn-danger { background:#e50914!important; border-radius:5px!important; }
+.cinema-hero,.home-showcase {
+  border:0!important; border-radius:8px!important;
+  background:linear-gradient(90deg,rgba(0,0,0,.96) 0%,rgba(0,0,0,.78) 48%,rgba(0,0,0,.18) 100%),#181818!important;
+  box-shadow:0 16px 40px rgba(0,0,0,.18);
+}
+.cinema-hero h1,.showcase-copy h1,.section-heading h2 { color:#fff!important; }
+.cinema-hero h1 span,.hero-kicker,.showcase-kicker,.section-eyebrow,.showcase-overline { color:#e50914!important; }
+.movie-card,.admin-form-card,.admin-table-card,.hall-admin-card,.hall-table-wrap {
+  color:var(--cinema-text)!important; background:var(--theme-card)!important;
+  border:1px solid var(--cinema-border)!important; border-radius:7px!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+html[data-theme="light"] .movie-card .card-title,
+html[data-theme="light"] .movie-card .card-body,
+html[data-theme="light"] .admin-form-heading h1 { color:#191919!important; }
+html[data-theme="light"] .movie-card .text-muted,
+html[data-theme="light"] .movie-card .text-secondary { color:#626262!important; }
+.movie-card:hover { border-color:rgba(229,9,20,.6)!important; transform:translateY(-4px); }
+.movie-card .badge,.showcase-meta .age-rating { color:#fff!important; background:#e50914!important; border-color:#e50914!important; }
+.form-control,.form-select {
+  color:var(--theme-input-text)!important; background-color:var(--theme-input)!important;
+  border-color:var(--cinema-border)!important;
+}
+.form-control::placeholder { color:var(--cinema-muted)!important; }
+.form-select option { color:var(--theme-input-text); background:var(--theme-input); }
+.form-label,.form-check-label { color:var(--cinema-text); }
+.text-muted,.text-secondary { color:var(--cinema-muted)!important; }
+.card,.modal-content,.list-group-item {
+  color:var(--cinema-text); background:var(--theme-card); border-color:var(--cinema-border);
+}
+.card-header,.card-footer { color:var(--cinema-text); background:var(--theme-card-raised); border-color:var(--cinema-border); }
+.table { --bs-table-color:var(--cinema-text); --bs-table-bg:transparent; --bs-table-border-color:var(--cinema-border); }
+.table td { color:var(--cinema-text); }
+.table thead th,.table-light th,.table-light td { color:var(--cinema-text)!important; background:var(--theme-card-raised)!important; border-color:var(--cinema-border)!important; }
+.table-light { --bs-table-bg:var(--theme-card-raised); --bs-table-color:var(--cinema-text); }
+.alert-light { color:var(--cinema-text); background:var(--theme-card-raised); border-color:var(--cinema-border)!important; }
+.cinema-footer { color:var(--cinema-text)!important; background:var(--theme-footer)!important; border-color:var(--cinema-border)!important; }
+.dropdown-menu { color:var(--cinema-text); background:var(--theme-card); border-color:var(--cinema-border); }
+.dropdown-item { color:var(--cinema-text); }
+.dropdown-item:hover { color:#e50914; background:var(--theme-card-raised); }
+.pagination .page-link { color:var(--cinema-accent); background:var(--theme-card); border-color:var(--cinema-border); }
+.pagination .active .page-link { color:#fff; background:#e50914; border-color:#e50914; }
+.movie-details-card,.checkout-summary {
+  color:var(--cinema-text)!important; background:var(--theme-card)!important;
+  border-color:var(--cinema-border)!important;
+}
+.movie-details-card h2,.movie-details-card h4,.movie-details-card h5,
+.movie-details-card p,.movie-details-card .lead,.movie-details-card .small,
+.movie-details-card .text-muted,.checkout-summary h4,.checkout-summary h5,
+.checkout-summary strong,.checkout-summary .form-label,.checkout-summary .form-check-label,
+.checkout-summary .summary-value,.checkout-summary .text-muted { color:var(--cinema-text)!important; }
+.movie-details-card .showtime-choice-card { color:var(--cinema-text)!important; background:var(--theme-card-raised)!important; }
+.payment-page { color:#191919; }
+.payment-summary { background:#f5f5f5; }
+.theme-picker { display:flex; align-items:center; gap:.45rem; padding:.2rem .45rem; border:1px solid var(--cinema-border); border-radius:6px; }
+.theme-picker > i { color:var(--cinema-accent); }
+.theme-select { width:auto; min-width:118px; min-height:32px!important; padding:.25rem 1.8rem .25rem .5rem; font-size:.78rem; border:0!important; box-shadow:none!important; }
+html[data-theme="light"] .theme-select { color:#191919!important; background-color:#fff!important; }
+html[data-theme="light"] .admin-form-card .form-label,
+html[data-theme="light"] .admin-form-card .form-check-label,
+html[data-theme="light"] .hall-admin-card .form-label { color:#191919!important; }
+html[data-theme="light"] .admin-form-card .form-control,
+html[data-theme="light"] .admin-form-card .form-select,
+html[data-theme="light"] .hall-admin-card .form-control,
+html[data-theme="light"] .hall-admin-card .form-select { color:#191919!important; background:#fff!important; }
+html[data-theme="light"] .admin-table-card .table,
+html[data-theme="light"] .hall-table-wrap .table { color:#191919!important; --bs-table-color:#191919; }
+html[data-theme="light"] .admin-table-card .table td,
+html[data-theme="light"] .hall-table-wrap .table td { color:#292929!important; }
+html[data-theme="light"] .admin-table-card .table thead th,
+html[data-theme="light"] .hall-table-wrap .table thead th { color:#333!important; background:#eee!important; }
+html[data-theme="light"] .hall-seat-map { background:#eee; }
+html[data-theme="light"] .hall-seat-cell { color:#191919; background:#fff; border-color:#ccc; }
+html[data-theme="light"] .hall-seat-cell small { color:#333; }
+html[data-theme="light"] .hall-screen-label { color:#333; background:#ddd; }
+html[data-theme="light"] .hall-type-pill { color:#333; background:#e5e5e5; }
+html[data-theme="light"] .hall-guideline { color:#333; background:#eef5fc; }
+html[data-theme="light"] .profile-avatar-placeholder { background:#555; }
+html[data-theme="light"] .cinema-navbar .navbar-collapse { background:transparent; }
+@media (max-width:991.98px) {
+  .theme-picker-item { padding:.45rem .75rem; }
+  .theme-picker { width:max-content; }
+}
+@media (prefers-reduced-motion:reduce) {
+  *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; }
+}
