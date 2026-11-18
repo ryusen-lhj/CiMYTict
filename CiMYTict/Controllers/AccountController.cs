@@ -154,7 +154,8 @@ namespace CiMYTict.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unable to send password reset email.");
-                    TempData["Error"] = "The password reset email could not be sent. Please contact the cinema administrator.";
+                    // Keep the response identical for registered and unregistered email addresses.
+                    TempData["Success"] = "If that email address is registered, a password reset link has been sent. The link expires in 30 minutes.";
                     return RedirectToAction(nameof(ForgotPassword));
                 }
             }
