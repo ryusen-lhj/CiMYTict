@@ -31,12 +31,18 @@
     <span asp-validation-for="Description" class="text-danger small"></span>
 </div>
 <div class="row">
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
         <label asp-for="ReleaseDate" class="form-label">Release Date</label>
         <input asp-for="ReleaseDate" type="date" class="form-control" />
         <span asp-validation-for="ReleaseDate" class="text-danger small"></span>
     </div>
-    <div class="col-md-6 mb-3">
+    <div class="col-md-4 mb-3">
+        <label asp-for="TheaterEndDate" class="form-label">Last Day in Theaters</label>
+        <input asp-for="TheaterEndDate" type="date" class="form-control" />
+        <span asp-validation-for="TheaterEndDate" class="text-danger small"></span>
+        <div class="form-text">Defaults to 3 weeks (21 days) after release. Admin can change this date.</div>
+    </div>
+    <div class="col-md-4 mb-3">
         <label asp-for="TrailerUrl" class="form-label">Trailer (YouTube embed URL)</label>
         <input asp-for="TrailerUrl" class="form-control" placeholder="https://www.youtube.com/embed/..." />
         <span asp-validation-for="TrailerUrl" class="text-danger small"></span>
