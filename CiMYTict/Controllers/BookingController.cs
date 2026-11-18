@@ -257,6 +257,9 @@ namespace CiMYTict.Controllers
             }
 
             var pointsDiscount = pointsToRedeem / 100m;
+            // Malaysia National QR / DuitNow QR payload supplied by the merchant QR image.
+            ViewBag.PaymentQrCodeBase64 = GenerateQrCodeBase64("00020201021126440014A0000006150001010689005302121620011153465204000053034585802MY5910LIMHONGJUN6002MY621406102605001937630401DC");
+
             return View(new CiMYTict.ViewModels.PaymentViewModel
             {
                 Booking = booking,
@@ -273,7 +276,7 @@ namespace CiMYTict.Controllers
         // STEP D: Complete Payment, Apply Discounts/Points, Generate QR Ticket
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ConfirmPayment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod)
+        public async Task<IActionResult> ConfirmPayment(int bookingId, string? promoCode, bool redeemPoints, string paymentMethod, string? bankName)
         {
             int userId = CurrentUserId;
             var booking = await _context.Bookings
@@ -288,11 +291,19 @@ namespace CiMYTict.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            if (!AllowedPaymentMethods.Contains(paymentMethod))
+            var allowedBanks = new[] { "Maybank", "CIMB Bank", "Public Bank", "RHB Bank", "Hong Leong Bank", "AmBank", "Alliance Bank", "Affin Bank" };
+            if (!AllowedPaymentMethods.Contains(paymentMethod) ||
+                (paymentMethod == "FPX Online Banking" && !allowedBanks.Contains(bankName)))
             {
-                TempData["Error"] = "Please choose a valid payment method.";
+                TempData["Error"] = "Please choose a valid payment method and bank.";
                 return RedirectToAction(nameof(Checkout), new { bookingId });
             }
+
+            var recordedPaymentMethod = paymentMethod == "FPX Online Banking"
+                ? $"FPX - {bankName}"
+                : paymentMethod == "Touch 'n Go eWallet"
+                    ? "Touch 'n Go DuitNow QR"
+                    : "Card Payment (Demo)";
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return Unauthorized();
@@ -345,7 +356,7 @@ namespace CiMYTict.Controllers
             _context.Payments.Add(new Payment
             {
                 BookingId = booking.BookingId,
-                PaymentMethod = paymentMethod,
+                PaymentMethod = recordedPaymentMethod,
                 TransactionId = $"TXN-{Guid.NewGuid().ToString("N")[..10].ToUpper()}",
                 AmountPaid = booking.TotalAmount,
                 Status = PaymentStatus.Completed,
