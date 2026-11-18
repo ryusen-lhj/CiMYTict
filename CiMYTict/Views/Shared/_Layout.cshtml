@@ -4,6 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CiMYTict</title>
+    <script>
+        (function () {
+            try {
+                const preference = localStorage.getItem("cimytict-theme") || "device";
+                const deviceDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+                const theme = preference === "device" ? (deviceDark ? "dark" : "light") : preference;
+                document.documentElement.setAttribute("data-theme", theme);
+                document.documentElement.setAttribute("data-theme-preference", preference);
+            } catch { document.documentElement.setAttribute("data-theme", "dark"); }
+        })();
+    </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -44,6 +55,17 @@
                         }
                     </ul>
                     <ul class="navbar-nav align-items-lg-center gap-lg-2">
+                        <li class="nav-item theme-picker-item">
+                            <label class="visually-hidden" for="themePreference">Colour theme</label>
+                            <div class="theme-picker">
+                                <i class="bi bi-palette2" aria-hidden="true"></i>
+                                <select id="themePreference" class="form-select form-select-sm theme-select" aria-label="Choose colour theme">
+                                    <option value="dark">Dark mode</option>
+                                    <option value="light">Light mode</option>
+                                    <option value="device">Device mode</option>
+                                </select>
+                            </div>
+                        </li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item"><a class="nav-link account-link d-flex align-items-center gap-2" asp-controller="Account" asp-action="Profile">@if (User.FindFirst("ProfileImagePath")?.Value is string avatar && !string.IsNullOrWhiteSpace(avatar)) { <img src="@avatar" alt="" class="profile-avatar-nav" /> } else { <i class="bi bi-person-circle"></i> }<span>@User.Identity.Name</span></a></li>
