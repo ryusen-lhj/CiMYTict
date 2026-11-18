@@ -63,6 +63,11 @@ using (var scope = app.Services.CreateScope())
 
         IF COL_LENGTH(N'dbo.Users', N'LockoutEnd') IS NULL
             ALTER TABLE dbo.Users ADD LockoutEnd DATETIME2 NULL;
+
+        IF COL_LENGTH(N'dbo.Movies', N'TheaterEndDate') IS NULL
+            ALTER TABLE dbo.Movies ADD TheaterEndDate DATE NULL;
+
+        UPDATE dbo.Movies SET TheaterEndDate = DATEADD(DAY, 21, CAST(ReleaseDate AS DATE)) WHERE TheaterEndDate IS NULL;
         """);
 }
 
