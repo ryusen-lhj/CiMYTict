@@ -26,6 +26,11 @@ namespace CiMYTict.Models
         [StringLength(300)]
         public string? ProfileImagePath { get; set; }
 
+        // Progressive login protection: 3 failures trigger 1, 5, then 10 minute lockouts.
+        public int AccessFailedCount { get; set; } = 0;
+        public int LockoutLevel { get; set; } = 0;
+        public DateTime? LockoutEnd { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
