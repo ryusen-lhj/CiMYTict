@@ -3,12 +3,19 @@
 @{
     ViewData["Title"] = "Select Seats";
     var rows = Model.AllSeats.GroupBy(s => s.RowLabel).OrderBy(g => g.Key);
+    var isP18 = ViewBag.IsP18 is bool value && value;
 }
 
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card shadow-sm border-0 p-4">
             <h4 class="fw-bold mb-1">@Model.Showtime.Movie?.Title</h4>
+            @if (isP18)
+            {
+                <div class="alert alert-danger small fw-semibold">
+                    P18 MOVIE — Only customers aged 18 and above may purchase a ticket. You will be asked to confirm your age before continuing.
+                </div>
+            }
             <p class="text-muted small mb-4">
                 @Model.Showtime.CinemaHall?.HallName &bull; @Model.Showtime.StartTime.ToString("ddd, dd MMM yyyy hh:mm tt")
             </p>
@@ -72,8 +79,9 @@
 
     <!-- Booking Summary Sidebar -->
     <div class="col-lg-4">
-        <form asp-action="ReserveSeats" method="post" class="card shadow-sm border-0 p-4">
+        <form asp-action="ReserveSeats" method="post" id="reserveSeatsForm" class="card shadow-sm border-0 p-4">
             <input type="hidden" name="showtimeId" value="@Model.Showtime.ShowtimeId" />
+            <input type="hidden" name="adultConfirmed" id="adultConfirmed" value="false" />
             <div id="hiddenInputs"></div>
 
             <h5 class="fw-bold border-bottom pb-2">Booking Summary</h5>
@@ -100,6 +108,19 @@
         const displayTotal = document.getElementById('totalPriceDisplay');
         const hiddenInputs = document.getElementById('hiddenInputs');
         const proceedBtn = document.getElementById('proceedBtn');
+        const reserveForm = document.getElementById('reserveSeatsForm');
+        const isP18 = @isP18.ToString().ToLowerInvariant();
+
+        reserveForm.addEventListener('submit', event => {
+            if (isP18) {
+                const confirmed = window.confirm('This is a P18 movie. Are you 18 years old or above?\n\nSelect OK only if you confirm that you are at least 18.');
+                if (!confirmed) {
+                    event.preventDefault();
+                    return;
+                }
+                document.getElementById('adultConfirmed').value = 'true';
+            }
+        });
 
         seatBtns.forEach(btn => {
             btn.addEventListener('click', () => {
