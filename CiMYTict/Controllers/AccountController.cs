@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
+using System.Net;
+using System.Net.Mail;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace CiMYTict.Controllers
 {
@@ -15,11 +18,17 @@ namespace CiMYTict.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly IDataProtector _passwordResetProtector;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public AccountController(ApplicationDbContext context, IWebHostEnvironment environment, IDataProtectionProvider protectionProvider, IConfiguration configuration, ILogger<AccountController> logger)
         {
             _context = context;
             _environment = environment;
+            _passwordResetProtector = protectionProvider.CreateProtector("CiMYTict.PasswordReset.v1");
+            _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -125,6 +134,99 @@ namespace CiMYTict.Controllers
             return user.Role == UserRole.Staff
                 ? RedirectToAction("Index", "AdminDashboard")
                 : RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email.Trim().ToLowerInvariant());
+            if (user != null)
+            {
+                var expires = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
+                var token = _passwordResetProtector.Protect($"{user.UserId}|{expires}");
+                var resetUrl = Url.Action(nameof(ResetPassword), "Account", new { email = user.Email, token }, Request.Scheme);
+                try { await SendPasswordResetEmailAsync(user.Email, resetUrl!); }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unable to send password reset email.");
+                    TempData["Error"] = "The password reset email could not be sent. Please contact the cinema administrator.";
+                    return RedirectToAction(nameof(ForgotPassword));
+                }
+            }
+            TempData["Success"] = "If that email address is registered, a password reset link has been sent. The link expires in 30 minutes.";
+            return RedirectToAction(nameof(ForgotPassword));
+        }
+
+        [HttpGet]
+        public IActionResult ResetPassword(string email, string token)
+        {
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token)) return BadRequest();
+            return View(new ResetPasswordViewModel { Email = email, Token = token });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid) return View(model);
+            try
+            {
+                var payload = _passwordResetProtector.Unprotect(model.Token);
+                var parts = payload.Split('|');
+                if (parts.Length != 2 || !int.TryParse(parts[0], out var userId) ||
+                    !long.TryParse(parts[1], out var expires) || DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expires)
+                {
+                    ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
+                    return View(model);
+                }
+                var user = await _context.Users.FirstOrDefaultAsync(u =>
+                    u.UserId == userId && u.Email == model.Email.Trim().ToLowerInvariant());
+                if (user == null)
+                {
+                    ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
+                    return View(model);
+                }
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                user.AccessFailedCount = 0;
+                user.LockoutLevel = 0;
+                user.LockoutEnd = null;
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Your password has been reset. You can now sign in with your new password.";
+                return RedirectToAction(nameof(Login));
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
+                return View(model);
+            }
+        }
+
+        private async Task SendPasswordResetEmailAsync(string recipient, string resetUrl)
+        {
+            var host = _configuration["Email:SmtpHost"];
+            var username = _configuration["Email:SmtpUsername"];
+            var password = _configuration["Email:SmtpPassword"];
+            var from = _configuration["Email:From"];
+            if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+                throw new InvalidOperationException("SMTP email settings are not configured.");
+
+            using var message = new MailMessage(from, recipient)
+            {
+                Subject = "Reset your CiMYTict password",
+                Body = $"We received a request to reset your CiMYTict password.\n\nOpen this link within 30 minutes:\n{resetUrl}\n\nIf you did not request this, ignore this email.",
+                IsBodyHtml = false
+            };
+            using var smtp = new SmtpClient(host, int.TryParse(_configuration["Email:SmtpPort"], out var port) ? port : 587)
+            {
+                EnableSsl = !string.Equals(_configuration["Email:UseSsl"], "false", StringComparison.OrdinalIgnoreCase),
+                Credentials = string.IsNullOrWhiteSpace(username) ? CredentialCache.DefaultNetworkCredentials : new NetworkCredential(username, password)
+            };
+            await smtp.SendMailAsync(message);
         }
 
         [HttpPost]
