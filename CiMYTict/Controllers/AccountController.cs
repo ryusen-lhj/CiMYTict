@@ -148,7 +148,7 @@ namespace CiMYTict.Controllers
             if (user != null)
             {
                 var expires = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
-                var token = _passwordResetProtector.Protect($"{user.UserId}|{expires}");
+                var token = _passwordResetProtector.Protect($"{user.UserId}|{expires}|{user.PasswordHash}");
                 var resetUrl = Url.Action(nameof(ResetPassword), "Account", new { email = user.Email, token }, Request.Scheme);
                 try { await SendPasswordResetEmailAsync(user.Email, resetUrl!); }
                 catch (Exception ex)
@@ -178,8 +178,8 @@ namespace CiMYTict.Controllers
             try
             {
                 var payload = _passwordResetProtector.Unprotect(model.Token);
-                var parts = payload.Split('|');
-                if (parts.Length != 2 || !int.TryParse(parts[0], out var userId) ||
+                var parts = payload.Split('|', 3);
+                if (parts.Length != 3 || !int.TryParse(parts[0], out var userId) ||
                     !long.TryParse(parts[1], out var expires) || DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expires)
                 {
                     ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
