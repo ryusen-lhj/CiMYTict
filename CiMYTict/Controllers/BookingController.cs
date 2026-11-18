@@ -211,9 +211,7 @@ namespace CiMYTict.Controllers
             {
                 Booking = booking,
                 AvailableUserPoints = user?.RewardPoints ?? 0,
-                AvailablePromotions = await _context.Promotions
-                    .Where(p => p.IsActive && p.ValidFrom <= CinemaClock.Today && p.ValidUntil >= CinemaClock.Today)
-                    .OrderBy(p => p.Code).ToListAsync()
+                AvailablePromotions = new List<Promotion>()
             });
         }
 
