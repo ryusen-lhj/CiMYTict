@@ -70,11 +70,52 @@ namespace CiMYTict.Controllers
 
             var email = model.Email.Trim().ToLowerInvariant();
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Invalid email or password.");
                 return View(model);
             }
+
+            var now = DateTime.UtcNow;
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > now)
+            {
+                var remaining = user.LockoutEnd.Value - now;
+                ModelState.AddModelError(string.Empty,
+                    $"Too many failed attempts. Please try again in {Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds))} seconds.");
+                return View(model);
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(model.Password, user.PasswordHash))
+            {
+                user.AccessFailedCount++;
+                if (user.AccessFailedCount >= 3)
+                {
+                    user.AccessFailedCount = 0;
+                    user.LockoutLevel = Math.Min(user.LockoutLevel + 1, 3);
+                    var lockMinutes = user.LockoutLevel switch
+                    {
+                        1 => 1,
+                        2 => 5,
+                        _ => 10
+                    };
+                    user.LockoutEnd = now.AddMinutes(lockMinutes);
+                    await _context.SaveChangesAsync();
+                    ModelState.AddModelError(string.Empty,
+                        $"Three incorrect attempts. Login is locked for {lockMinutes} minute(s).");
+                }
+                else
+                {
+                    await _context.SaveChangesAsync();
+                    ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                }
+                return View(model);
+            }
+
+            // A successful login clears the current failed-attempt counter and lockout.
+            user.AccessFailedCount = 0;
+            user.LockoutLevel = 0;
+            user.LockoutEnd = null;
+            await _context.SaveChangesAsync();
 
             await SignInUserAsync(user);
 
