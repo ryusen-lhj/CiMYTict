@@ -111,16 +111,14 @@
         const reserveForm = document.getElementById('reserveSeatsForm');
         const isP18 = @isP18.ToString().ToLowerInvariant();
 
-        reserveForm.addEventListener('submit', event => {
-            if (isP18) {
-                const confirmed = window.confirm('This is a P18 movie. Are you 18 years old or above?\n\nSelect OK only if you confirm that you are at least 18.');
-                if (!confirmed) {
-                    event.preventDefault();
-                    return;
-                }
+        if (isP18) {
+            const confirmed = window.confirm('This is a P18 movie. Are you 18 years old or above?' + String.fromCharCode(10, 10) + 'Select OK only if you confirm that you are at least 18.');
+            if (!confirmed) {
+                window.location.href = '/Home/MovieDetails/@Model.Showtime.MovieId';
+            } else {
                 document.getElementById('adultConfirmed').value = 'true';
             }
-        });
+        }
 
         seatBtns.forEach(btn => {
             btn.addEventListener('click', () => {
