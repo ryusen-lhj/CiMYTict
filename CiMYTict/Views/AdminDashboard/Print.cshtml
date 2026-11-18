@@ -1,0 +1,106 @@
+@model CiMYTict.ViewModels.AdminDashboardViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "CiMYTict Printable Sales Report";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CiMYTict Sales Report</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { background: #fff; color: #111; font-family: Arial, Helvetica, sans-serif; font-size: 13px; }
+        .report-wrap { max-width: 1200px; margin: 24px auto; padding: 0 24px; }
+        h1, h2, h3, h4, th, td, p, span, strong { color: #111 !important; }
+        h1 { font-size: 26px; font-weight: 800; }
+        h2 { font-size: 18px; font-weight: 700; margin-top: 26px; }
+        .metric { border: 1px solid #777; border-radius: 6px; padding: 12px; height: 100%; }
+        .metric-label { font-size: 11px; font-weight: 700; color: #333 !important; text-transform: uppercase; }
+        .metric-value { font-size: 21px; font-weight: 800; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #777 !important; padding: 7px 8px !important; font-size: 11px; vertical-align: top; }
+        th { background: #e9ecef !important; font-weight: 800; }
+        .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 16px; }
+        .muted { color: #333 !important; }
+        @@media print {
+            body { font-size: 10pt; }
+            .report-wrap { max-width: none; margin: 0; padding: 0; }
+            .toolbar { display: none !important; }
+            .metric { break-inside: avoid; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            thead { display: table-header-group; }
+            @@page { size: landscape; margin: 12mm; }
+        }
+    </style>
+</head>
+<body>
+<div class="report-wrap">
+    <div class="toolbar">
+        <button class="btn btn-dark btn-sm" onclick="window.print()">Print Report</button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="window.close()">Close Tab</button>
+    </div>
+    <header class="border-bottom pb-3 mb-3">
+        <h1>CiMYTict — Sales &amp; Occupancy Report</h1>
+        <p class="muted mb-1">Generated: @DateTime.Now.ToString("dd MMM yyyy, hh:mm tt")</p>
+        <p class="muted mb-0">Reporting currency: Malaysian Ringgit (RM)</p>
+    </header>
+
+    <div class="row g-2">
+        <div class="col-3"><div class="metric"><div class="metric-label">Today's Revenue</div><div class="metric-value">RM @Model.DailyRevenue.ToString("F2")</div></div></div>
+        <div class="col-3"><div class="metric"><div class="metric-label">Last 7 Days</div><div class="metric-value">RM @Model.WeeklyRevenue.ToString("F2")</div></div></div>
+        <div class="col-3"><div class="metric"><div class="metric-label">This Month</div><div class="metric-value">RM @Model.MonthlyRevenue.ToString("F2")</div></div></div>
+        <div class="col-3"><div class="metric"><div class="metric-label">Total Revenue</div><div class="metric-value">RM @Model.TotalRevenue.ToString("F2")</div></div></div>
+    </div>
+    <p class="mt-3"><strong>Total tickets sold:</strong> @Model.TotalTicketsSold &nbsp; | &nbsp; <strong>Active movies:</strong> @Model.ActiveMoviesCount</p>
+
+    <h2>Revenue by Movie</h2>
+    <table>
+        <thead><tr><th>Movie</th><th>Tickets Sold</th><th>Revenue (RM)</th></tr></thead>
+        <tbody>
+        @foreach (var item in Model.MovieSales)
+        {
+            <tr><td>@item.MovieTitle</td><td>@item.TicketsSold</td><td>@item.Revenue.ToString("F2")</td></tr>
+        }
+        @if (!Model.MovieSales.Any()) { <tr><td colspan="3">No confirmed ticket sales.</td></tr> }
+        </tbody>
+    </table>
+
+    <h2>Latest Showtime Occupancy</h2>
+    <table>
+        <thead><tr><th>Movie</th><th>Hall</th><th>Showtime</th><th>Seats Sold</th><th>Capacity</th><th>Occupancy</th></tr></thead>
+        <tbody>
+        @foreach (var item in Model.ShowtimeOccupancies)
+        {
+            <tr><td>@item.MovieTitle</td><td>@item.HallName</td><td>@item.StartTime.ToString("dd MMM yyyy, hh:mm tt")</td><td>@item.SoldSeats</td><td>@item.TotalCapacity</td><td>@item.OccupancyPercentage%</td></tr>
+        }
+        @if (!Model.ShowtimeOccupancies.Any()) { <tr><td colspan="6">No showtime records.</td></tr> }
+        </tbody>
+    </table>
+
+    <h2>Recent Confirmed Ticket Transactions</h2>
+    <table>
+        <thead><tr><th>Booking Ref</th><th>Customer</th><th>Movie</th><th>Showtime</th><th>Seats</th><th>Paid (RM)</th></tr></thead>
+        <tbody>
+        @foreach (var booking in Model.RecentBookings)
+        {
+            <tr>
+                <td>@booking.BookingReference</td>
+                <td>@booking.User?.FullName</td>
+                <td>@booking.Showtime?.Movie?.Title</td>
+                <td>@booking.Showtime?.StartTime.ToString("dd MMM yyyy, hh:mm tt")</td>
+                <td>@string.Join(", ", booking.BookingSeats.Select(seat => seat.Seat?.SeatCode))</td>
+                <td>@booking.TotalAmount.ToString("F2")</td>
+            </tr>
+        }
+        @if (!Model.RecentBookings.Any()) { <tr><td colspan="6">No confirmed transactions.</td></tr> }
+        </tbody>
+    </table>
+</div>
+<script>
+    window.addEventListener('load', () => window.setTimeout(() => window.print(), 400));
+</script>
+</body>
+</html>
