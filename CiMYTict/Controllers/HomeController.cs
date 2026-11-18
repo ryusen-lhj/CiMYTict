@@ -22,7 +22,7 @@ namespace CiMYTict.Controllers
             // No tracking keeps this read-only landing-page query lightweight.
             var movies = await _context.Movies
                 .AsNoTracking()
-                .Where(m => m.IsActive && m.Showtimes.Any(s => s.StartTime >= now))
+                .Where(m => m.IsActive && (!m.TheaterEndDate.HasValue || m.TheaterEndDate.Value >= CinemaClock.Today) && m.Showtimes.Any(s => s.StartTime >= now))
                 .OrderByDescending(m => m.ReleaseDate)
                 .ThenBy(m => m.Title)
                 .ToListAsync();
@@ -36,7 +36,7 @@ namespace CiMYTict.Controllers
             var movie = await _context.Movies
                 .Include(m => m.Showtimes.Where(s => s.StartTime >= now))
                 .ThenInclude(s => s.CinemaHall)
-                .FirstOrDefaultAsync(m => m.MovieId == id && m.IsActive);
+                .FirstOrDefaultAsync(m => m.MovieId == id && m.IsActive && (!m.TheaterEndDate.HasValue || m.TheaterEndDate.Value >= CinemaClock.Today));
 
             if (movie == null) return NotFound();
             return View(movie);
