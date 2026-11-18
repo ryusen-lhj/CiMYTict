@@ -41,6 +41,8 @@ namespace CiMYTict.Controllers
         public async Task<IActionResult> Create(Movie movie, IFormFile? posterFile)
         {
             ValidateGenre(movie);
+            if (!movie.TheaterEndDate.HasValue) movie.TheaterEndDate = movie.ReleaseDate.Date.AddDays(21);
+            if (movie.TheaterEndDate.Value.Date < movie.ReleaseDate.Date) ModelState.AddModelError(nameof(movie.TheaterEndDate), "The last day in theaters cannot be before the release date.");
             ValidateTrailer(movie);
             ValidatePoster(posterFile);
             if (!ModelState.IsValid)
@@ -74,6 +76,8 @@ namespace CiMYTict.Controllers
             if (id != movie.MovieId) return NotFound();
 
             ValidateGenre(movie);
+            if (!movie.TheaterEndDate.HasValue) movie.TheaterEndDate = movie.ReleaseDate.Date.AddDays(21);
+            if (movie.TheaterEndDate.Value.Date < movie.ReleaseDate.Date) ModelState.AddModelError(nameof(movie.TheaterEndDate), "The last day in theaters cannot be before the release date.");
             ValidateTrailer(movie);
             ValidatePoster(posterFile);
             if (!ModelState.IsValid)
@@ -91,6 +95,7 @@ namespace CiMYTict.Controllers
             existing.DurationMinutes = movie.DurationMinutes;
             existing.AgeRating = movie.AgeRating;
             existing.ReleaseDate = movie.ReleaseDate;
+            existing.TheaterEndDate = movie.TheaterEndDate;
             existing.TrailerUrl = movie.TrailerUrl;
             existing.IsActive = movie.IsActive;
 
