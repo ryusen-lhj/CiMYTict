@@ -54,6 +54,15 @@ using (var scope = app.Services.CreateScope())
 
         IF COL_LENGTH(N'dbo.Users', N'ProfileImagePath') IS NULL
             ALTER TABLE dbo.Users ADD ProfileImagePath NVARCHAR(300) NULL;
+
+        IF COL_LENGTH(N'dbo.Users', N'AccessFailedCount') IS NULL
+            ALTER TABLE dbo.Users ADD AccessFailedCount INT NOT NULL CONSTRAINT DF_Users_AccessFailedCount DEFAULT (0);
+
+        IF COL_LENGTH(N'dbo.Users', N'LockoutLevel') IS NULL
+            ALTER TABLE dbo.Users ADD LockoutLevel INT NOT NULL CONSTRAINT DF_Users_LockoutLevel DEFAULT (0);
+
+        IF COL_LENGTH(N'dbo.Users', N'LockoutEnd') IS NULL
+            ALTER TABLE dbo.Users ADD LockoutEnd DATETIME2 NULL;
         """);
 }
 
