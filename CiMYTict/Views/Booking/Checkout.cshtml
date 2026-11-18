@@ -19,22 +19,10 @@
             <form asp-action="Payment" method="get" id="checkoutForm">
                 <input type="hidden" name="bookingId" value="@Model.Booking.BookingId" />
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="promoCodeSelect">Promo Code</label>
-                    <select name="promoCode" id="promoCodeSelect" class="form-select">
-                        <option value="">No promo code</option>
-                        @foreach (var promo in Model.AvailablePromotions)
-                        {
-                            <option value="@promo.Code" data-percent="@promo.DiscountPercentage" data-max="@promo.MaxDiscountAmount">@promo.Code — @promo.Description</option>
-                        }
-                    </select>
-                    @if (!Model.AvailablePromotions.Any())
-                    {
-                        <div class="form-text">There are currently no active promo codes.</div>
-                    }
-                    else
-                    {
-                        <div class="form-text">Choose one of the active promo codes above.</div>
-                    }
+                    <label class="form-label fw-semibold" for="promoCode">Promo Code</label>
+                    <input type="text" name="promoCode" id="promoCode" class="form-control"
+                           placeholder="Enter a promo code" maxlength="30" autocomplete="off" />
+                    <div class="form-text">Enter a promo code provided by the cinema. Codes are created and managed by our staff.</div>
                 </div>
                 @if (Model.AvailableUserPoints >= 100)
                 {
@@ -73,14 +61,11 @@
 <script>
     const subtotal = @Model.Booking.SubTotal.ToString(System.Globalization.CultureInfo.InvariantCulture);
     const availablePoints = @Model.AvailableUserPoints;
-    const promoSelect = document.getElementById('promoCodeSelect');
     const redeemCheck = document.getElementById('redeemChk');
     function updateCheckoutTotal() {
-        const option = promoSelect.options[promoSelect.selectedIndex];
-        const percent = Number(option?.dataset.percent || 0);
-        const maxDiscount = Number(option?.dataset.max || 0);
-        const promoDiscount = Math.min(subtotal * percent / 100, maxDiscount);
-        const remaining = Math.max(0, subtotal - promoDiscount);
+        // Promo codes are validated and their discount is calculated securely on the server.
+        const promoDiscount = 0;
+        const remaining = subtotal;
         let points = 0;
         if (redeemCheck?.checked) {
             const maxPoints = Math.min(availablePoints, Math.floor(remaining) * 100);
@@ -94,7 +79,6 @@
             ? points.toLocaleString() + ' reward points will be redeemed.'
             : 'No reward points will be used.';
     }
-    promoSelect.addEventListener('change', updateCheckoutTotal);
     redeemCheck?.addEventListener('change', updateCheckoutTotal);
     updateCheckoutTotal();
 
