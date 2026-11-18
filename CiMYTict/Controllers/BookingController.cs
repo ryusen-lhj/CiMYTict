@@ -81,6 +81,7 @@ namespace CiMYTict.Controllers
                 .Select(bs => bs.SeatId)
                 .ToHashSetAsync();
 
+            ViewBag.IsP18 = IsP18Rating(showtime.Movie.AgeRating);
             return View(new SeatMapViewModel
             {
                 Showtime = showtime,
@@ -92,7 +93,7 @@ namespace CiMYTict.Controllers
         // STEP B: Lock Selected Seats for 10 Minutes & Proceed to Checkout
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReserveSeats(int showtimeId, List<int> selectedSeatIds)
+        public async Task<IActionResult> ReserveSeats(int showtimeId, List<int> selectedSeatIds, bool adultConfirmed = false)
         {
             var seatIds = (selectedSeatIds ?? new List<int>()).Distinct().ToList();
 
@@ -118,6 +119,12 @@ namespace CiMYTict.Controllers
             {
                 TempData["Error"] = "This showtime has already started.";
                 return RedirectToAction("MovieDetails", "Home", new { id = showtime.MovieId });
+            }
+
+            if (IsP18Rating(showtime.Movie.AgeRating) && !adultConfirmed)
+            {
+                TempData["Error"] = "You must confirm that you are 18 years old or above before booking a P18 movie.";
+                return RedirectToAction(nameof(SelectSeats), new { showtimeId });
             }
 
             // Only seats that belong to THIS showtime's hall are valid
@@ -492,6 +499,11 @@ namespace CiMYTict.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(CancellationRequests));
         }
+
+        private static bool IsP18Rating(string? rating) =>
+            string.Equals(rating?.Trim(), "P18", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rating?.Trim(), "18", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(rating?.Trim(), "18+", StringComparison.OrdinalIgnoreCase);
 
         private static string GenerateQrCodeBase64(string content)
         {
