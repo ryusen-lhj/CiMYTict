@@ -262,9 +262,6 @@ namespace CiMYTict.Controllers
             }
 
             var pointsDiscount = pointsToRedeem / 100m;
-            // Malaysia National QR / DuitNow QR payload supplied by the merchant QR image.
-            ViewBag.PaymentQrCodeBase64 = GenerateQrCodeBase64("00020201021126440014A0000006150001010689005302121620011153465204000053034585802MY5910LIMHONGJUN6002MY621406102605001937630401DC");
-
             return View(new CiMYTict.ViewModels.PaymentViewModel
             {
                 Booking = booking,
