@@ -512,7 +512,33 @@ namespace CiMYTict.Controllers
             return RedirectToAction(nameof(CancellationRequests));
         }
 
-        private static bool IsP18Rating(string? rating) =>
+                private async Task SendCancellationDecisionEmailAsync(string recipient, Booking booking, string decision)
+        {
+            var host = _configuration["Email:SmtpHost"];
+            var username = _configuration["Email:SmtpUsername"];
+            var password = _configuration["Email:SmtpPassword"];
+            var from = _configuration["Email:From"];
+            if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(from))
+                throw new InvalidOperationException("SMTP email settings are not configured.");
+
+            var approved = decision == "Approve";
+            var movie = booking.Showtime?.Movie?.Title ?? "your movie";
+            var hall = booking.Showtime?.CinemaHall?.HallName ?? "cinema hall";
+            var time = booking.Showtime?.StartTime.ToString("ddd, dd MMM yyyy, hh:mm tt") ?? "scheduled time";
+            var subject = approved ? $"Cancellation approved — {booking.BookingReference}" : $"Cancellation rejected — {booking.BookingReference}";
+            var body = approved
+                ? $"Hello,\\n\\nYour ticket cancellation request has been APPROVED.\\n\\nBooking reference: {booking.BookingReference}\\nMovie: {movie}\\nShowtime: {time}\\nHall: {hall}\\n\\nThe booking is cancelled and the payment has been marked refunded in CiMYTict. Please note this demo system does not issue a real bank/e-wallet refund.\\n\\nCiMYTict"
+                : $"Hello,\\n\\nYour ticket cancellation request has been REJECTED. Your ticket remains confirmed and active.\\n\\nBooking reference: {booking.BookingReference}\\nMovie: {movie}\\nShowtime: {time}\\nHall: {hall}\\n\\nCiMYTict";
+            using var message = new MailMessage(from, recipient) { Subject = subject, Body = body, IsBodyHtml = false };
+            using var smtp = new SmtpClient(host, int.TryParse(_configuration["Email:SmtpPort"], out var port) ? port : 587)
+            {
+                EnableSsl = !string.Equals(_configuration["Email:UseSsl"], "false", StringComparison.OrdinalIgnoreCase),
+                Credentials = string.IsNullOrWhiteSpace(username) ? CredentialCache.DefaultNetworkCredentials : new NetworkCredential(username, password)
+            };
+            await smtp.SendMailAsync(message);
+        }
+
+private static bool IsP18Rating(string? rating) =>
             string.Equals(rating?.Trim(), "P18", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(rating?.Trim(), "18", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(rating?.Trim(), "18+", StringComparison.OrdinalIgnoreCase);
