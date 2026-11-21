@@ -4,11 +4,12 @@ namespace CiMYTict.ViewModels
 {
     public class ResetPasswordViewModel
     {
-        [Required]
-        public string Token { get; set; } = string.Empty;
-
         [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
+
+        [Required, StringLength(6, MinimumLength = 6)]
+        [Display(Name = "6-digit verification code")]
+        public string VerificationCode { get; set; } = string.Empty;
 
         [Required, MinLength(8), DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
