@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using QRCoder;
 using System.Data;
 using System.Security.Claims;
+using System.Net.Mail;
+using System.Net;
 
 namespace CiMYTict.Controllers
 {
@@ -21,10 +23,12 @@ namespace CiMYTict.Controllers
         };
 
         private readonly ApplicationDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public BookingController(ApplicationDbContext context)
+        public BookingController(ApplicationDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -462,6 +466,8 @@ namespace CiMYTict.Controllers
         {
             var booking = await _context.Bookings
                 .Include(b => b.Payment)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.Movie)
+                .Include(b => b.Showtime)!.ThenInclude(s => s!.CinemaHall)
                 .FirstOrDefaultAsync(b => b.BookingId == bookingId && b.Status == BookingStatus.CancellationRequested);
             if (booking == null) return NotFound();
 
@@ -492,6 +498,17 @@ namespace CiMYTict.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Email the customer about the decision; admin receives an on-page confirmation via TempData.
+            var customer = await _context.Users.FindAsync(booking.UserId);
+            if (customer != null)
+            {
+                try { await SendCancellationDecisionEmailAsync(customer.Email, booking, decision); }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = (TempData["Error"] as string ?? "") + " Customer email notification could not be sent; check SMTP settings.";
+                }
+            }
             return RedirectToAction(nameof(CancellationRequests));
         }
 
