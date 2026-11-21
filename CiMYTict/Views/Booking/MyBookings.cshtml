@@ -42,6 +42,12 @@ else
                     }
                     else if (b.Status == BookingStatus.Confirmed)
                     {
+                        @if (b.CancellationDecision == "Rejected")
+                        {
+                            <div class="alert alert-danger small mt-3 mb-2">
+                                <strong>Cancellation request rejected.</strong> Your ticket is still confirmed. Check your email for the cancellation decision details.
+                            </div>
+                        }
                         <div class="d-flex gap-2 mt-3 flex-wrap">
                             <a asp-action="Ticket" asp-route-bookingId="@b.BookingId" class="btn btn-danger btn-sm">View E-Ticket</a>
                             @if (b.Showtime!.StartTime > CiMYTict.Services.CinemaClock.Now.AddHours(2))
