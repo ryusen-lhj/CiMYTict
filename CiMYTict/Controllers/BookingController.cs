@@ -527,8 +527,8 @@ namespace CiMYTict.Controllers
             var time = booking.Showtime?.StartTime.ToString("ddd, dd MMM yyyy, hh:mm tt") ?? "scheduled time";
             var subject = approved ? $"Cancellation approved — {booking.BookingReference}" : $"Cancellation rejected — {booking.BookingReference}";
             var body = approved
-                ? $"Hello,\\n\\nYour ticket cancellation request has been APPROVED.\\n\\nBooking reference: {booking.BookingReference}\\nMovie: {movie}\\nShowtime: {time}\\nHall: {hall}\\n\\nThe booking is cancelled and the payment has been marked refunded in CiMYTict. Please note this demo system does not issue a real bank/e-wallet refund.\\n\\nCiMYTict"
-                : $"Hello,\\n\\nYour ticket cancellation request has been REJECTED. Your ticket remains confirmed and active.\\n\\nBooking reference: {booking.BookingReference}\\nMovie: {movie}\\nShowtime: {time}\\nHall: {hall}\\n\\nCiMYTict";
+                ? $"Hello,\n\nYour ticket cancellation request has been APPROVED.\n\nBooking reference: {booking.BookingReference}\nMovie: {movie}\nShowtime: {time}\nHall: {hall}\n\nThe booking is cancelled and the payment has been marked refunded in CiMYTict. Please note this demo system does not issue a real bank/e-wallet refund.\n\nCiMYTict"
+                : $"Hello,\n\nYour ticket cancellation request has been REJECTED. Your ticket remains confirmed and active.\n\nBooking reference: {booking.BookingReference}\nMovie: {movie}\nShowtime: {time}\nHall: {hall}\n\nCiMYTict";
             using var message = new MailMessage(from, recipient) { Subject = subject, Body = body, IsBodyHtml = false };
             using var smtp = new SmtpClient(host, int.TryParse(_configuration["Email:SmtpPort"], out var port) ? port : 587)
             {
