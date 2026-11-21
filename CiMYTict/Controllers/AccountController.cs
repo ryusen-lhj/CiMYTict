@@ -11,6 +11,7 @@ using System.Security.Claims;
 using System.Net;
 using System.Net.Mail;
 using Microsoft.AspNetCore.DataProtection;
+using System.Security.Cryptography;
 
 namespace CiMYTict.Controllers
 {
@@ -144,30 +145,40 @@ namespace CiMYTict.Controllers
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email.Trim().ToLowerInvariant());
+            var email = model.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
             if (user != null)
             {
-                var expires = DateTimeOffset.UtcNow.AddMinutes(30).ToUnixTimeSeconds();
-                var token = _passwordResetProtector.Protect($"{user.UserId}|{expires}|{user.PasswordHash}");
-                var resetUrl = Url.Action(nameof(ResetPassword), "Account", new { email = user.Email, token }, Request.Scheme);
-                try { await SendPasswordResetEmailAsync(user.Email, resetUrl!); }
+                var code = RandomNumberGenerator.GetInt32(0, 1000000).ToString("D6");
+                var existing = await _context.PasswordResetCodes.Where(x => x.Email == email).ToListAsync();
+                _context.PasswordResetCodes.RemoveRange(existing);
+                _context.PasswordResetCodes.Add(new PasswordResetCode
+                {
+                    Email = email,
+                    CodeHash = BCrypt.Net.BCrypt.HashPassword(code),
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
+                    Attempts = 0
+                });
+                await _context.SaveChangesAsync();
+                try { await SendPasswordResetEmailAsync(email, code); }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Unable to send password reset email.");
-                    // Keep the response identical for registered and unregistered email addresses.
-                    TempData["Success"] = "If that email address is registered, a password reset link has been sent. The link expires in 30 minutes.";
+                    _logger.LogError(ex, "Unable to send password verification code.");
+                    TempData["Error"] = "We couldn't send your verification code. Please try again later.";
                     return RedirectToAction(nameof(ForgotPassword));
                 }
+                TempData["Success"] = "A 6-digit verification code has been sent to your email. It expires in 10 minutes.";
+                return RedirectToAction(nameof(ResetPassword), new { email });
             }
-            TempData["Success"] = "If that email address is registered, a password reset link has been sent. The link expires in 30 minutes.";
+            TempData["Success"] = "If that email is registered, a verification code will be sent.";
             return RedirectToAction(nameof(ForgotPassword));
         }
 
         [HttpGet]
-        public IActionResult ResetPassword(string email, string token)
+        public IActionResult ResetPassword(string email)
         {
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(token)) return BadRequest();
-            return View(new ResetPasswordViewModel { Email = email, Token = token });
+            if (string.IsNullOrWhiteSpace(email)) return RedirectToAction(nameof(ForgotPassword));
+            return View(new ResetPasswordViewModel { Email = email });
         }
 
         [HttpPost]
@@ -175,39 +186,33 @@ namespace CiMYTict.Controllers
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            try
+            var email = model.Email.Trim().ToLowerInvariant();
+            var verification = await _context.PasswordResetCodes.FirstOrDefaultAsync(x => x.Email == email);
+            if (verification == null || verification.ExpiresAt <= DateTime.UtcNow || verification.Attempts >= 5)
             {
-                var payload = _passwordResetProtector.Unprotect(model.Token);
-                var parts = payload.Split('|', 3);
-                if (parts.Length != 3 || !int.TryParse(parts[0], out var userId) ||
-                    !long.TryParse(parts[1], out var expires) || DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expires)
-                {
-                    ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
-                    return View(model);
-                }
-                var user = await _context.Users.FirstOrDefaultAsync(u =>
-                    u.UserId == userId && u.Email == model.Email.Trim().ToLowerInvariant());
-                if (user == null)
-                {
-                    ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
-                    return View(model);
-                }
-                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
-                user.AccessFailedCount = 0;
-                user.LockoutLevel = 0;
-                user.LockoutEnd = null;
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Your password has been reset. You can now sign in with your new password.";
-                return RedirectToAction(nameof(Login));
-            }
-            catch (System.Security.Cryptography.CryptographicException)
-            {
-                ModelState.AddModelError(string.Empty, "This password reset link is invalid or has expired.");
+                ModelState.AddModelError(string.Empty, "The verification code is expired or invalid. Please request a new code.");
                 return View(model);
             }
+            if (!BCrypt.Net.BCrypt.Verify(model.VerificationCode.Trim(), verification.CodeHash))
+            {
+                verification.Attempts++;
+                await _context.SaveChangesAsync();
+                ModelState.AddModelError(string.Empty, $"Incorrect verification code. {Math.Max(0, 5 - verification.Attempts)} attempt(s) remaining.");
+                return View(model);
+            }
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null) return RedirectToAction(nameof(ForgotPassword));
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.Password);
+            user.AccessFailedCount = 0;
+            user.LockoutLevel = 0;
+            user.LockoutEnd = null;
+            _context.PasswordResetCodes.Remove(verification);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Your password has been reset successfully. You can sign in with your new password.";
+            return RedirectToAction(nameof(Login));
         }
 
-        private async Task SendPasswordResetEmailAsync(string recipient, string resetUrl)
+        private async Task SendPasswordResetEmailAsync(string recipient, string verificationCode)
         {
             var host = _configuration["Email:SmtpHost"];
             var username = _configuration["Email:SmtpUsername"];
@@ -218,8 +223,8 @@ namespace CiMYTict.Controllers
 
             using var message = new MailMessage(from, recipient)
             {
-                Subject = "Reset your CiMYTict password",
-                Body = $"We received a request to reset your CiMYTict password.\n\nOpen this link within 30 minutes:\n{resetUrl}\n\nIf you did not request this, ignore this email.",
+                Subject = "Your CiMYTict password reset verification code",
+                Body = $"Your CiMYTict password reset code is: {verificationCode}\n\nThis code expires in 10 minutes. You have up to 5 attempts. If you did not request a password reset, ignore this email.",
                 IsBodyHtml = false
             };
             using var smtp = new SmtpClient(host, int.TryParse(_configuration["Email:SmtpPort"], out var port) ? port : 587)
