@@ -37,6 +37,9 @@ using (var scope = app.Services.CreateScope())
     // existing database. Keep this small, idempotent schema patch here so older
     // CiMYTict databases receive the cancellation-request columns on startup.
     context.Database.ExecuteSqlRaw("""
+        IF OBJECT_ID(N'dbo.PasswordResetCodes', N'U') IS NULL
+            CREATE TABLE dbo.PasswordResetCodes (Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY, Email NVARCHAR(150) NOT NULL, CodeHash NVARCHAR(200) NOT NULL, ExpiresAt DATETIME2 NOT NULL, Attempts INT NOT NULL DEFAULT 0);
+
         IF OBJECT_ID(N'dbo.Bookings', N'U') IS NULL
             THROW 51000, 'CiMYTict database is missing dbo.Bookings. Check DefaultConnection.', 1;
 
